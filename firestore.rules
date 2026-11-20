@@ -1,0 +1,212 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signed() { return request.auth != null; }
+    function own(uid) { return signed() && request.auth.uid == uid; }
+    function validName(n) { return n is string && n.size() >= 2 && n.size() <= 32; }
+    function partyExists(pid) {
+      return pid is string && pid.size() > 4 && pid.size() <= 20
+        && exists(/databases/$(database)/documents/parties/$(pid));
+    }
+    function member(pid) {
+      return signed() && partyExists(pid)
+        && request.auth.uid in get(/databases/$(database)/documents/parties/$(pid)).data.memberIds;
+    }
+    function leader(pid) {
+      return signed() && partyExists(pid)
+        && get(/databases/$(database)/documents/parties/$(pid)).data.leaderId == request.auth.uid;
+    }
+    function nullableId(v) { return v == null || (v is string && v.size() <= 48); }
+    function validPartyAddition(pid) {
+      let fresh = request.resource.data.memberIds.removeAll(resource.data.memberIds);
+      return fresh.size() == 0 || (fresh.size() == 1
+        && exists(/databases/$(database)/documents/parties/$(pid)/requests/$(fresh[0]))
+        && get(/databases/$(database)/documents/parties/$(pid)/requests/$(fresh[0])).data.status == 'pending');
+    }
+
+    // Privileged Master accounts are added ONLY from Firebase Console / Admin SDK.
+    // A regular user may read their own assignment, never create or modify it.
+    function siteAdmin(){
+      return signed()
+        && exists(/databases/$(database)/documents/siteAdmins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/siteAdmins/$(request.auth.uid)).data.enabled == true;
+    }
+    match /siteAdmins/{uid} {
+      allow get: if own(uid);
+      allow list, create, update, delete: if false;
+    }
+    // Public published content. Writes require the separate protected role.
+    match /siteContent/{contentId} {
+      allow get, list: if true;
+      allow create, update: if siteAdmin()
+        && contentId.matches('^(core|race|class|world|section)-[a-z0-9-]{1,56}$')
+        && request.resource.data.keys().hasOnly(['title','description','imageUrl','meta','blocks','updatedAt'])
+        && request.resource.data.keys().hasAll(['updatedAt'])
+        && (!('title' in request.resource.data) || (request.resource.data.title is string && request.resource.data.title.size() <= 150))
+        && (!('description' in request.resource.data) || (request.resource.data.description is string && request.resource.data.description.size() <= 4000))
+        && (!('imageUrl' in request.resource.data) || (request.resource.data.imageUrl is string && request.resource.data.imageUrl.size() <= 2048))
+        && (!('meta' in request.resource.data) || (request.resource.data.meta is map && request.resource.data.meta.size() <= 20))
+        && (!('blocks' in request.resource.data) || (request.resource.data.blocks is map && request.resource.data.blocks.size() <= 160))
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if siteAdmin();
+    }
+
+    match /users/{uid} {
+      // Preserve the original registration contract; account registration still works.
+      allow get: if own(uid);
+      allow list, delete: if false;
+      allow create: if own(uid)
+        && request.resource.data.keys().hasOnly(['uid','displayName','createdAt'])
+        && request.resource.data.keys().hasAll(['uid','displayName','createdAt'])
+        && request.resource.data.uid == uid
+        && validName(request.resource.data.displayName)
+        && request.resource.data.createdAt == request.time;
+      allow update: if own(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName'])
+        && validName(request.resource.data.displayName);
+
+      match /settings/{settingId} {
+        allow get: if own(uid);
+        allow list, delete: if false;
+        allow create, update: if own(uid) && (
+          (settingId == 'playerState'
+            && request.resource.data.keys().hasOnly(['activeCharacterId','partyId','pendingPartyId'])
+            && (!('activeCharacterId' in request.resource.data) || nullableId(request.resource.data.activeCharacterId))
+            && (!('partyId' in request.resource.data) ||
+              (nullableId(request.resource.data.partyId)
+               && (request.resource.data.partyId == null || member(request.resource.data.partyId))))
+            && (!('pendingPartyId' in request.resource.data) || nullableId(request.resource.data.pendingPartyId)))
+          ||
+          (settingId == 'notifications'
+            && request.resource.data.keys().hasOnly(['emailOptIn','email','consentVersion','updatedAt'])
+            && request.resource.data.keys().hasAll(['emailOptIn','email','consentVersion','updatedAt'])
+            && request.resource.data.emailOptIn is bool
+            && request.resource.data.email == request.auth.token.email
+            && request.resource.data.consentVersion == 'v1'
+            && request.resource.data.updatedAt == request.time)
+        );
+      }
+
+      match /characters/{characterId} {
+        allow get, list: if own(uid);
+        allow create: if own(uid) && validCharacter(uid)
+          && request.resource.data.createdAt == request.time;
+        allow update: if own(uid) && validCharacter(uid)
+          && request.resource.data.ownerId == resource.data.ownerId
+          && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if own(uid);
+
+        function validCharacter(ownerId) {
+          let d = request.resource.data;
+          return d.keys().hasOnly([
+              'schemaVersion','ownerId','name','bio','raceId','classId','level',
+              'attributes','baseSkills','pathIndex','pathSkills','health','healthMax',
+              'mana','manaMax','speed','defense','artData','inventory','equipped','createdAt','updatedAt'
+            ])
+            && d.keys().hasAll(['ownerId','name','raceId','classId','level','attributes','baseSkills','pathIndex','pathSkills','artData','updatedAt'])
+            && d.ownerId == ownerId
+            && d.name is string && d.name.size() >= 1 && d.name.size() <= 40
+            && d.bio is string && d.bio.size() <= 400
+            && d.raceId is string && d.raceId.size() <= 48
+            && d.classId is string && d.classId.size() <= 48
+            && d.level is int && d.level >= 1 && d.level <= 10
+            && d.attributes is map && d.attributes.size() == 6
+            && d.baseSkills is list && d.baseSkills.size() <= 3
+            && d.pathIndex is int && d.pathIndex >= -1 && d.pathIndex <= 3
+            && d.pathSkills is list && d.pathSkills.size() <= 2
+            && d.artData is string && d.artData.size() <= 170000
+            && d.health is number && d.health >= 0 && d.health <= 9999
+            && d.healthMax is number && d.healthMax >= 0 && d.healthMax <= 9999
+            && d.mana is number && d.mana >= 0 && d.mana <= 9999
+            && d.manaMax is number && d.manaMax >= 0 && d.manaMax <= 9999
+            && d.speed is number && d.speed >= 0 && d.speed <= 100
+            && d.defense is number && d.defense >= 0 && d.defense <= 100
+            && d.inventory is list && d.inventory.size() <= 20
+            && d.equipped is list && d.equipped.size() <= 20
+            && d.updatedAt == request.time;
+        }
+      }
+    }
+
+    match /parties/{pid} {
+      allow get: if signed() && request.auth.uid in resource.data.memberIds;
+      allow list: if false;
+      allow create: if signed()
+        && request.resource.data.keys().hasOnly(['leaderId','name','description','emblemData','memberIds','regionId','note','createdAt','updatedAt'])
+        && request.resource.data.keys().hasAll(['leaderId','name','description','emblemData','memberIds','regionId','note','createdAt','updatedAt'])
+        && request.resource.data.leaderId == request.auth.uid
+        && request.resource.data.memberIds == [request.auth.uid]
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 3 && request.resource.data.name.size() <= 50
+        && request.resource.data.description is string && request.resource.data.description.size() <= 500
+        && request.resource.data.emblemData is string && request.resource.data.emblemData.size() <= 110000
+        && request.resource.data.regionId is string && request.resource.data.regionId.size() <= 48
+        && request.resource.data.note is string && request.resource.data.note.size() <= 350
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow update: if (
+          (leader(pid)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','description','emblemData','memberIds','regionId','note','updatedAt'])
+            && request.resource.data.leaderId == resource.data.leaderId
+            && request.resource.data.memberIds is list
+            && request.resource.data.memberIds.size() <= 6
+            && validPartyAddition(pid)
+            && resource.data.leaderId in request.resource.data.memberIds
+            && request.resource.data.name is string
+            && request.resource.data.name.size() >= 3 && request.resource.data.name.size() <= 50
+            && request.resource.data.description is string && request.resource.data.description.size() <= 500
+            && request.resource.data.emblemData is string && request.resource.data.emblemData.size() <= 110000
+            && request.resource.data.regionId is string && request.resource.data.regionId.size() <= 48
+            && request.resource.data.note is string && request.resource.data.note.size() <= 350)
+          ||
+          (member(pid) && request.auth.uid != resource.data.leaderId
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberIds','updatedAt'])
+            && request.resource.data.memberIds == resource.data.memberIds.removeAll([request.auth.uid]))
+        ) && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+
+      match /requests/{requesterId} {
+        allow get: if own(requesterId) || leader(pid);
+        allow list: if leader(pid);
+        allow create: if own(requesterId) && partyExists(pid)
+          && !(request.auth.uid in get(/databases/$(database)/documents/parties/$(pid)).data.memberIds)
+          && request.resource.data.keys().hasOnly(['uid','displayName','status','createdAt'])
+          && request.resource.data.keys().hasAll(['uid','displayName','status','createdAt'])
+          && request.resource.data.uid == requesterId
+          && validName(request.resource.data.displayName)
+          && request.resource.data.status == 'pending'
+          && request.resource.data.createdAt == request.time;
+        allow update: if leader(pid)
+          && resource.data.status == 'pending'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','respondedAt'])
+          && request.resource.data.status in ['approved','rejected']
+          && request.resource.data.respondedAt == request.time;
+        allow delete: if own(requesterId) && resource.data.status in ['pending','rejected'];
+      }
+
+      match /roster/{memberUid} {
+        allow get, list: if member(pid);
+        allow create, update: if own(memberUid) && member(pid)
+          && request.resource.data.keys().hasOnly(['uid','characterId','characterName','className','level','health','healthMax','mana','manaMax','status','updatedAt'])
+          && request.resource.data.uid == memberUid
+          && request.resource.data.characterName is string && request.resource.data.characterName.size() <= 40
+          && request.resource.data.level is int && request.resource.data.level >= 1 && request.resource.data.level <= 10
+          && request.resource.data.health is number && request.resource.data.health >= 0
+          && request.resource.data.healthMax is number && request.resource.data.healthMax >= 0
+          && request.resource.data.mana is number && request.resource.data.mana >= 0
+          && request.resource.data.manaMax is number && request.resource.data.manaMax >= 0
+          && request.resource.data.updatedAt == request.time;
+        allow delete: if own(memberUid) && member(pid);
+      }
+    }
+
+    // A future privileged publishing backend will write announcements.
+    // Nobody can publish from the browser by editing their account role.
+    match /announcements/{announcementId} {
+      allow get, list: if signed() && resource.data.published == true;
+      allow create, update, delete: if false;
+    }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+}

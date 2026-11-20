@@ -1,0 +1,71 @@
+/* THAOS V1.1 — cinematic backgrounds, responsive framing and subtle cursor motion.
+   Additive layer: does not change class skills, player, Firebase or interaction flows. */
+:root { --art-easing:cubic-bezier(.18,.82,.2,1); }
+.home-hero { isolation:isolate; min-height:100svh; padding-top:calc(var(--header-h) + 100px); }
+.home-hero__scene { z-index:0; background:#07101a; }
+.home-hero__scene::before { display:none!important; }
+.home-hero__illustration {
+ position:absolute; inset:-2%; width:104%; height:104%; max-width:none;
+ object-fit:cover; object-position:center center;
+ will-change:transform; transform:translate3d(var(--art-move-x,0px),var(--art-move-y,0px),0) scale(1.025);
+ filter:saturate(.87) contrast(1.05) brightness(.89);
+}
+.home-hero__scene::after {
+ content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
+ background:linear-gradient(90deg,rgba(5,7,14,.97) 0%,rgba(5,8,16,.85) 27%,rgba(5,8,16,.54) 45%,rgba(5,8,16,.09) 76%,rgba(5,8,16,.24) 100%),linear-gradient(180deg,rgba(4,6,12,.28),transparent 35%,rgba(4,6,12,.15) 70%,#070812 100%);
+}
+.home-hero__atmosphere {position:absolute;inset:-10%;z-index:1;pointer-events:none;opacity:.6;
+ background:radial-gradient(ellipse at 72% 62%,rgba(163,217,231,.11),transparent 38%),radial-gradient(ellipse at 60% 80%,rgba(150,195,154,.11),transparent 35%);
+ animation:thaosHeroBreath 13s ease-in-out infinite alternate;}
+.home-hero__content {max-width:810px; text-shadow:0 2px 28px rgba(0,0,0,.27);}
+.home-hero h1 {margin:28px 0 0;}
+.home-hero h1 strong {font-size:clamp(76px,11.5vw,178px);}
+.home-hero__divider {display:block;margin:24px 0 6px 8px;width:clamp(65px,9vw,130px);height:1px;background:linear-gradient(90deg,#baff28,rgba(186,255,40,.09));position:relative;}
+.home-hero__divider::before {content:"";position:absolute;top:-3px;left:0;width:7px;height:7px;transform:rotate(45deg);background:#baff28;}
+.home-hero h1 span {margin:23px 0 0 6px;line-height:1.4;letter-spacing:clamp(.12em,.37vw,.32em);font-size:clamp(13px,1.8vw,26px);white-space:normal;}
+.home-hero p {margin:35px 0 0;max-width:570px;line-height:1.75;color:#d5dbe1;}
+.home-hero__actions {margin-top:46px;gap:14px;}
+.home-hero__actions .btn {backdrop-filter:blur(5px);}
+.home-hero .hero-index {color:#b7c9cf;}
+@keyframes thaosHeroBreath {from{opacity:.42;transform:scale(.985)}to{opacity:.75;transform:scale(1.05)}}
+/* Registration: source image remains a standalone WebP, form stays readable and functional. */
+.auth-shell {position:relative;isolation:isolate;overflow:hidden;max-width:none;}
+.auth-visual {position:absolute;inset:0;z-index:-1;overflow:hidden;pointer-events:none;background:#07101d;}
+.auth-visual__image {position:absolute;inset:-3%;width:106%;height:106%;max-width:none;
+ object-fit:cover;object-position:56% center;
+ transform:translate3d(var(--art-move-x,0px),var(--art-move-y,0px),0) scale(1.025);
+ will-change:transform;filter:saturate(.82) contrast(1.08) brightness(.82);}
+.auth-visual__shade {position:absolute;inset:0;
+ background:linear-gradient(90deg,rgba(5,7,14,.74) 0%,rgba(5,7,14,.39) 43%,rgba(5,7,14,.65) 72%,rgba(5,7,14,.79) 100%),linear-gradient(180deg,rgba(5,7,14,.35) 0%,transparent 35%,rgba(5,7,14,.40) 78%,#070812 100%);}
+.auth-story,.auth-box {z-index:1;}
+.auth-story::before,.auth-story::after {opacity:.55;}
+.auth-story p,.auth-feature span {text-shadow:0 2px 16px #05070d;}
+.auth-box {background:linear-gradient(145deg,rgba(13,20,30,.94),rgba(8,12,22,.97));backdrop-filter:blur(22px);border-color:rgba(190,226,190,.20);}
+/* Vector map: match the supplied SVG viewBox exactly, so marker percentages stay aligned. */
+.atlas-map__canvas {aspect-ratio:4071.54/4103.92!important;}
+.atlas-map .atlas-map__canvas>.atlas-map__image {object-fit:fill!important;}
+/* Class combat role instead of redundant, identical class progression. */
+.class-summary__stats #classCombatRole {color:var(--page-accent,#baff28);}
+@media (max-width:1050px) {
+ .home-hero__illustration{object-position:62% center;}
+ .home-hero__scene::after{background:linear-gradient(90deg,rgba(4,6,12,.95),rgba(4,6,12,.66) 52%,rgba(4,6,12,.26)),linear-gradient(180deg,transparent 45%,#070812);}
+ .auth-visual__shade{background:linear-gradient(90deg,rgba(4,6,13,.68),rgba(4,6,13,.58)),linear-gradient(180deg,rgba(4,6,13,.33),transparent 45%,#070812);}
+}
+@media (max-width:760px) {
+ .home-hero{min-height:100svh;padding:138px 7vw 95px;align-items:center;}
+ .home-hero h1 strong{font-size:clamp(61px,20vw,115px);}
+ .home-hero h1 span{font-size:clamp(11px,3vw,19px);letter-spacing:.14em;margin-top:20px;}
+ .home-hero__divider{margin-top:18px;}
+ .home-hero__illustration{object-position:69% center;filter:brightness(.67) saturate(.78);}
+ .home-hero__scene::after{background:linear-gradient(90deg,rgba(4,6,12,.94),rgba(4,6,12,.62) 80%),linear-gradient(0deg,#070812,transparent 40%);}
+ .home-hero p{margin-top:24px;font-size:14px;}
+ .home-hero__actions{margin-top:30px;}
+ .auth-visual__image{object-position:72% center;filter:brightness(.6) saturate(.75);}
+ .auth-story p{font-size:14px;}
+ .auth-feature{margin-top:23px;}
+ .auth-visual__shade{background:linear-gradient(90deg,rgba(5,7,14,.65),rgba(5,7,14,.56)),linear-gradient(0deg,#070812,transparent 58%);}
+}
+@media (prefers-reduced-motion:reduce) {
+ .home-hero__illustration,.auth-visual__image{transform:none!important;will-change:auto;}
+ .home-hero__atmosphere{animation:none!important;}
+}

@@ -1,0 +1,20 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#070812"><title>Мой профиль — THAOS</title><link rel="stylesheet" href="./css/styles.css?v=20261117-no-transition-1"><link rel="stylesheet" href="./css/auth.css"></head><body>
+<canvas id="ambientCanvas" aria-hidden="true"></canvas><div class="noise"></div>
+<header class="site-header"><a class="brand" href="./index.html"><span class="brand__mark">T</span><span class="brand__copy"><b>THAOS</b><small>Chronicles of Gods</small></span></a><nav class="nav"><a href="./classes.html">Классы</a><a href="./races.html">Расы</a><a href="./core.html">Core</a><a href="./activities.html">Активности</a><a href="./world.html">Мир</a></nav><a class="account" href="./account.html">Мой профиль</a></header>
+<main class="account-shell"><section class="account-intro reveal"><div><span class="kicker">SYSTEM // IDENTITY</span><h1>Мой профиль</h1></div><div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn--accent" href="./player.html#characters">Открыть кабинет игрока →</a><a class="btn" href="./index.html">← На главную</a></div></section>
+  <div class="auth-status" id="accountStatus" role="status" aria-live="polite" hidden></div>
+  <p class="auth-subtitle" id="accountLoading">Проверяем доступ к аккаунту…</p>
+  <section class="account-grid" id="accountPrivate" hidden>
+    <article class="account-panel"><span class="kicker">PLAYER IDENTITY</span><h2 id="profileName">Путешественник</h2>
+      <div class="account-datum"><small>Электронная почта</small><strong id="profileEmail">—</strong></div>
+      <div class="account-datum"><small>Подтверждение почты</small><strong id="profileVerify">—</strong></div>
+      <div class="account-datum"><small>Firebase ID</small><strong id="profileUid">—</strong></div>
+      <div class="account-datum"><small>Роль в кампаниях</small><strong>Пока нет кампаний</strong></div>
+      <div class="account-actions"><button class="btn" id="resendVerification" type="button">Подтвердить почту</button><button class="btn btn--muted" id="signOut" type="button">Выйти</button></div>
+    </article>
+    <article class="account-panel"><span class="kicker">PROFILE SETTINGS</span><h2>Настройки</h2>
+      <form class="auth-form" id="profileEditForm"><div class="auth-field"><label for="editNickname">Имя в системе</label><input id="editNickname" minlength="2" maxlength="32" autocomplete="nickname" required></div><button id="profileSave" class="btn btn--accent" type="submit">Сохранить имя</button></form>
+      <div class="account-outline" style="margin-top:26px"><b>Кабинет игрока THAOS</b><p style="margin:8px 0 14px">Создавайте персонажей, развивайте навыки, вступайте в группы и отмечайте маршрут на карте.</p><a class="btn btn--accent" href="./player.html#dashboard">Открыть Player System →</a></div>
+    </article>
+  </section>
+</main><footer class="footer"><b>THAOS / Profile</b><span>Только данные собственного аккаунта</span></footer><div class="toast" id="toast"></div><script src="./js/common.js?v=20261117-no-transition-1"></script><script type="module" src="./js/account-page.js"></script></body></html>

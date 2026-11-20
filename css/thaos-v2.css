@@ -1,0 +1,82 @@
+/* THAOS V2 / cinematic archive art; all enhancements preserve the existing HTML and JS. */
+.core-archive-page,.rule-book{isolation:isolate}
+.core-archive-page{background:radial-gradient(ellipse at 65% 3%,rgba(115,124,135,.075),transparent 38%),#070812}
+.rule-module{isolation:isolate;background:#0b0d13}
+.rule-module__art{position:absolute;inset:0;z-index:0;background-image:var(--module-art);background-position:70% center;background-size:cover;opacity:.84;filter:saturate(.77) contrast(1.1) brightness(.88);transition:transform .7s cubic-bezier(.2,.7,.1,1),opacity .3s}
+.rule-module:hover .rule-module__art{transform:scale(1.055);opacity:1}
+.rule-module::before{z-index:1;opacity:.3}
+.rule-module__top,.rule-module__body{position:relative;z-index:3}
+.rule-module__body{position:absolute}
+.rule-module__sigil{z-index:2;color:rgba(248,248,249,.12);mix-blend-mode:screen;opacity:.4}
+.rule-module__top b{color:#a5afc0;text-shadow:0 2px 9px #070812}
+.rule-module::after{inset:0;left:0;right:0;bottom:0;height:auto;z-index:1;pointer-events:none;opacity:1;background:linear-gradient(180deg,rgba(6,8,14,.36),rgba(6,8,14,.03) 30%,rgba(6,8,14,.43) 58%,rgba(5,7,12,.97) 100%),linear-gradient(90deg,rgba(6,8,14,.47),transparent 90%)}
+.rule-module__body p{color:#c1c9d3;max-width:540px;text-shadow:0 1px 12px #060910}
+.rule-module__body h2{text-shadow:0 2px 20px #060910}
+.rule-module__tags i{background:rgba(8,11,17,.65);color:#c2cbd5;backdrop-filter:blur(6px)}
+.rule-module[data-core-id="checks"]{--module:#ff6d67}
+.rule-module[data-core-id="character"]{--module:#dccba8}
+.rule-module[data-core-id="movement"]{--module:#65c8ef}
+.rule-module[data-core-id="gear"]{--module:#56bdc6}
+.rule-module[data-core-id="progression"]{--module:#cc857e}
+.rule-book .rule-hero{background-image:linear-gradient(90deg,#090b12 0%,rgba(8,10,17,.94) 37%,rgba(8,10,17,.40) 80%,rgba(8,10,17,.55)),var(--rule-art);background-size:cover;background-position:right 37%;border-radius:28px;padding:48px clamp(20px,4vw,58px) 40px;border:1px solid rgba(204,210,226,.10)}
+.rule-book::before{z-index:-1}
+.rule-hero__copy,.rule-summary{position:relative;z-index:2}
+.rule-hero__number{opacity:.34}
+/* smoke-grey gallery background for the race/class archive, using the approved artworks */
+body:has(.class-select),body:has(.race-select){--section-art:url('../assets/classes-backdrop.webp');background:#07090d}
+body:has(.race-select){--section-art:url('../assets/races-backdrop.webp')}
+body:has(.class-select) main,body:has(.race-select) main{position:relative;isolation:isolate;min-height:100vh}
+body:has(.class-select) main::before,body:has(.race-select) main::before{content:"";position:absolute;inset:0 0 auto 0;height:100%;min-height:850px;background-image:linear-gradient(90deg,rgba(6,8,13,.86),rgba(6,8,13,.5) 52%,rgba(6,8,13,.74)),linear-gradient(180deg,rgba(6,8,13,.55) 0%,rgba(6,8,13,.05) 36%,#07090d 92%),var(--section-art);background-size:cover;background-position:center top;filter:saturate(.67);opacity:.82;z-index:-1;pointer-events:none}
+body:has(.class-select) .page-hero,body:has(.race-select) .page-hero{position:relative}
+.class-accordion,.race-accordion{box-shadow:0 24px 80px rgba(0,0,0,.48);backdrop-filter:blur(8px)}
+/* Artwork can be managed from the CMS without changing source files. */
+.class-panel{background-image:linear-gradient(180deg,rgba(7,9,15,.20),rgba(7,9,15,.92)),var(--cms-item-art,none);background-position:center;background-size:cover}
+.race-panel{--cms-item-art:none}
+.race-panel.has-cms-art .race-panel__image{object-fit:cover;object-position:center}
+.rule-demo__link{display:inline-flex;color:var(--rule-accent);font-weight:700;text-decoration:none;padding:12px 16px;border:1px solid color-mix(in srgb,var(--rule-accent) 30%,transparent);border-radius:11px}
+.rule-demo__link:hover{background:color-mix(in srgb,var(--rule-accent) 8%,transparent)}
+.admin-shortcut{border:1px solid rgba(255,133,115,.3);border-radius:12px;color:#ffc4b3!important;padding:10px!important;text-transform:uppercase;font-size:10px!important;letter-spacing:.08em}
+@media(min-width:761px){.rule-module[data-core-id="combat"]{grid-column:span 2}}
+@media(max-width:1100px){.rule-module[data-core-id="combat"]{grid-column:span 2}}
+@media(max-width:760px){.rule-module[data-core-id="combat"]{grid-column:auto}.rule-module__art{background-position:75% center}.rule-book .rule-hero{grid-template-columns:1fr;padding:30px 20px;background-image:linear-gradient(180deg,rgba(8,10,17,.78),rgba(8,10,17,.91)),var(--rule-art)}.rule-hero__number{top:0!important;font-size:80px!important;opacity:.17}.rule-summary{max-width:100%}}
+@media(prefers-reduced-motion:reduce){.rule-module__art{transition:none}}
+
+/* THAOS v2.1: use real image elements for gallery/module art.
+   Relative URLs in inline custom properties were resolving against /css/ in
+   some browsers. A real HTML img is resolved against the page reliably on
+   GitHub Pages project subpaths and is easier to cache/inspect in DevTools. */
+.rule-module__art {
+  display:block; position:absolute; inset:0; width:100%; height:100%;
+  max-width:none; max-height:none; object-fit:cover; object-position:67% center;
+  background-image:none !important; opacity:.96; z-index:0; pointer-events:none;
+  filter:saturate(.86) contrast(1.04) brightness(.90);
+  transition:transform .6s cubic-bezier(.2,.7,.1,1),opacity .3s;
+}
+.rule-module:hover .rule-module__art {transform:scale(1.045);opacity:1}
+.rule-module::after {
+  background:linear-gradient(180deg,rgba(7,9,15,.04) 0%,rgba(7,9,15,.25) 36%,rgba(7,9,15,.70) 62%,rgba(5,7,12,.97) 100%),
+             linear-gradient(90deg,rgba(6,8,14,.42),transparent 90%);
+}
+.rule-book .rule-hero {
+  isolation:isolate;
+  background-image:none !important;
+  background-color:#090b12;
+  min-height:410px;
+}
+.rule-hero__art {
+  display:block; position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; object-position:72% center; z-index:0; opacity:.95;
+  pointer-events:none; filter:saturate(.84) contrast(1.06) brightness(.9);
+}
+.rule-book .rule-hero::before {
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(90deg,#080a11 0%,rgba(8,10,17,.95) 27%,rgba(8,10,17,.58) 54%,rgba(8,10,17,.24) 79%,rgba(8,10,17,.42) 100%),
+             linear-gradient(0deg,rgba(8,10,17,.85),transparent 53%);
+}
+.rule-hero__copy,.rule-summary,.rule-hero__number {position:relative;z-index:2}
+.rule-hero__number{position:absolute}
+@media(max-width:760px){
+  .rule-hero__art {object-position:75% center;opacity:.75}
+  .rule-book .rule-hero::before {background:linear-gradient(180deg,rgba(8,10,17,.62),rgba(8,10,17,.76) 54%,rgba(8,10,17,.94))}
+}
+@media(prefers-reduced-motion:reduce){.rule-module__art{transition:none}}

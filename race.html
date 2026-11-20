@@ -1,0 +1,20 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#070812"><title>Раса — THAOS</title><link rel="stylesheet" href="./css/styles.css?v=20261117-no-transition-1"><link rel="stylesheet" href="./css/thaos-v2.css?v=20261117-no-transition-1"></head><body>
+<canvas id="ambientCanvas"></canvas><div class="noise"></div><header class="site-header"><a class="brand" href="./index.html"><span class="brand__mark">T</span><span class="brand__copy"><b>THAOS</b><small>Chronicles of Gods</small></span></a><nav class="nav"><a href="./classes.html">Классы</a><a class="is-active" href="./races.html">Расы</a><a href="./core.html">Core</a><a href="./activities.html">Активности</a><a href="./world.html">Мир</a></nav><a class="account" href="./auth.html">Вход / Регистрация</a></header>
+<main id="raceDossierPage"><nav class="dossier-switcher dossier-switcher--race" aria-label="Переключение рас">
+  <button class="dossier-switch dossier-switch--prev" id="prevRace" type="button" aria-label="Предыдущая раса">
+    <span class="dossier-switch__arrow">←</span><span class="dossier-switch__badge" id="prevRaceBadge">01</span><span class="dossier-switch__copy"><small>Предыдущая</small><b id="prevRaceName">—</b></span>
+  </button>
+  <div class="dossier-switcher__current"><small>RACE ARCHIVE</small><b id="currentRaceIndex">01 / 12</b><span id="currentRaceName">Раса</span></div>
+  <button class="dossier-switch dossier-switch--next" id="nextRace" type="button" aria-label="Следующая раса">
+    <span class="dossier-switch__copy"><small>Следующая</small><b id="nextRaceName">—</b></span><span class="dossier-switch__badge" id="nextRaceBadge">02</span><span class="dossier-switch__arrow">→</span>
+  </button>
+</nav><section class="race-dossier"><article class="race-dossier__copy reveal"><span class="kicker" id="raceTag">Раса</span><h1 id="raceName">Люди</h1><p id="raceDesc"></p><div class="race-passive"><span>Расовая особенность</span><h2 id="racePassive"></h2><p id="raceEffect"></p></div><div class="race-dossier__meta"><div><span>Статус</span><b>Базовая раса Core</b></div><div><span>Механика</span><b>1 расовая пассивка</b></div></div></article><div class="race-dossier__visual reveal" id="raceArtWrap">
+  <div class="race-art-placeholder" id="raceArtPlaceholder" aria-hidden="true">
+    <div class="race-art-placeholder__sigil"><i></i></div>
+    <b id="raceArtSlotName">THAOS // RACE ART</b>
+    <span id="raceArtSlotFile">Иллюстрация будет добавлена позже</span>
+  </div>
+  <img id="raceArt" hidden alt="">
+  <div class="race-dossier__edge"></div>
+  <span class="race-dossier__visual-label">THAOS // RACE ARCHIVE</span>
+</div></section></main><footer class="footer"><a href="./races.html">← Вернуться к выбору расы</a><span>Playable race dossier</span></footer><div class="toast" id="toast"></div><script src="./js/race-data.js"></script><script src="./js/common.js?v=20261117-no-transition-1"></script><script src="./js/race-page.js?v=20261117-no-transition-1"></script><script type="module" src="./js/auth-header.js"></script><script type="module" src="./js/cms-public.js?v=20261117-no-transition-1"></script></body></html>

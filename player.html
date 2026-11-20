@@ -1,0 +1,25 @@
+<!doctype html><html lang="ru"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#080b14">
+<meta name="description" content="Личный кабинет игрока THAOS: персонажи, группы, карта, инструменты и уведомления.">
+<title>Кабинет игрока — THAOS</title><link rel="stylesheet" href="./css/styles.css?v=20261117-no-transition-1"><link rel="stylesheet" href="./css/player.css"></head>
+<body class="player-body"><canvas id="ambientCanvas" aria-hidden="true"></canvas><div class="noise" aria-hidden="true"></div>
+<header class="site-header"><a class="brand" href="./index.html"><span class="brand__mark">T</span><span class="brand__copy"><b>THAOS</b><small>Chronicles of Gods</small></span></a><nav class="nav"><a href="./index.html">Главная</a><a href="./classes.html">Классы</a><a href="./races.html">Расы</a><a href="./core.html">Правила</a><a href="./world.html">Мир</a></nav><a class="account" href="./account.html">Мой аккаунт</a></header>
+<div class="player-shell">
+  <aside class="player-rail" aria-label="Разделы игрока"><div class="rail-label">PLAYER // SYSTEM</div>
+    <a class="rail-link" href="#characters" data-tab="characters"><span class="rail-icon">◇</span><span>Персонажи</span></a>
+    <a class="rail-link" href="#group" data-tab="group"><span class="rail-icon">♜</span><span>Группа</span></a>
+    <a class="rail-link" href="#map" data-tab="map"><span class="rail-icon">⌾</span><span>Карта</span></a>
+    <a class="rail-link" href="#tools" data-tab="tools"><span class="rail-icon">⚒</span><span>Инструменты</span></a>
+    <a class="rail-link" href="#dashboard" data-tab="dashboard"><span class="rail-icon">▦</span><span>Панель</span></a>
+    <div class="rail-bottom"><span class="rail-status-dot"></span><span id="playerRailStatus">Подключение…</span></div>
+  </aside>
+  <main class="player-workspace" id="playerWorkspace">
+    <div class="player-topline"><span id="playerBreadcrumb">ИГРОК / СИСТЕМА</span><span id="playerIdentity">Авторизация…</span></div>
+    <section class="player-intro"><div><div class="player-kicker">THAOS // PLAYER SYSTEM V1</div><h1 id="playerSectionTitle">Персонажи</h1><p id="playerSectionSubtitle">Ваши истории начинаются здесь.</p></div><a class="player-header-link" href="./account.html">Настройки профиля ↗</a></section>
+    <div class="player-notice" id="playerNotice" role="status" aria-live="polite" hidden></div>
+    <section class="player-auth-gate" id="playerAuthGate"><div class="player-card"><span class="player-kicker">ACCESS REQUIRED</span><h2>Откройте доступ к Системе</h2><p>Для сохранения персонажей и групп нужно войти в аккаунт THAOS.</p><a class="player-button player-button--primary" href="./auth.html">Войти / Зарегистрироваться</a></div></section>
+    <div id="playerContent" hidden></div>
+  </main>
+</div><div id="playerPrintSheet" class="player-print-sheet" aria-hidden="true"></div><div class="player-toast" id="playerToast" role="status" aria-live="polite"></div>
+<script src="./js/common.js?v=20261117-no-transition-1"></script><script src="./js/class-data.js"></script><script src="./js/path-descriptions.js"></script><script src="./js/race-data.js"></script><script src="./js/world-data.js"></script><script type="module" src="./js/player-app.js"></script>
+</body></html>

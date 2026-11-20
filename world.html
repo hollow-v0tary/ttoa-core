@@ -1,0 +1,18 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Мир — THAOS</title><link rel="stylesheet" href="./css/styles.css?v=20261117-no-transition-1"><link rel="stylesheet" href="./css/visual-refresh.css"></head><body>
+<header class="site-header"><a class="brand" href="./index.html"><span class="brand__mark">T</span><span class="brand__copy"><b>THAOS</b><small>Chronicles of Gods</small></span></a><nav class="nav"><a href="./classes.html">Классы</a><a href="./races.html">Расы</a><a href="./core.html">Core</a><a href="./activities.html">Активности</a><a class="is-active" href="./world.html">Мир</a></nav><a class="account" href="./auth.html">Вход / Регистрация</a></header>
+<main class="world-atlas">
+<section class="world-intro reveal"><div><span class="kicker">WORLD // TAOS ATLAS</span><h1>Мир Таоса</h1></div><div class="world-intro__copy"><p>Выберите область на карте. Справа откроется краткая карточка, а кнопка «Исследовать» ведёт в архив региона.</p><a class="world-text-link" href="./pact.html">Пакт Пяти Корон ↗</a></div></section>
+<section class="atlas-shell reveal">
+  <div class="atlas-map" id="atlasMap">
+    <div class="atlas-map__canvas" id="atlasCanvas">
+      <img class="atlas-map__image atlas-map__image--glow" src="./assets/world/taos-map.svg" alt="" aria-hidden="true" decoding="async">
+      <img class="atlas-map__image atlas-map__image--drawing" src="./assets/world/taos-map.svg" alt="Карта мира Таоса" decoding="async">
+      <div class="atlas-map__veil"></div>
+      <div class="atlas-hotspots" id="atlasHotspots" aria-label="Интерактивные регионы Таоса"></div>
+    </div>
+    <div class="atlas-map__legend"><span></span> 23 области мира · выберите точку</div>
+  </div>
+  <aside class="zone-card" id="zoneCard"><div class="zone-card__eyebrow" id="zoneType">Наследие Первых</div><h2 id="zoneName">Забытое Королевство</h2><div class="zone-card__art" id="zoneCardArt"><div class="zone-card__locator"></div><div class="zone-card__sigil">T</div><span id="zoneCardMeta">Центр карты</span></div><div class="zone-card__stats"><div><span>Опасность</span><b id="zoneDanger">4–10+</b></div><div><span>Статус</span><b id="zoneStatus">Исследуемая зона</b></div></div><p id="zoneShort">Сердце старого мира и территория Первой цивилизации.</p><a class="btn btn--accent" id="zoneOpen" href="./region.html?id=forgotten">Исследовать</a></aside>
+</section>
+<section class="world-archive reveal"><div class="content-head"><div><span class="kicker">FIVE CROWNS // LORE</span><h2>Пять взглядов на один мир</h2></div><p>У каждого Королевства есть собственная легенда основания и собственная версия сотворения Таоса. Они намеренно могут противоречить друг другу.</p></div><div class="kingdom-links"><a href="./region.html?id=ermest"><b>Эрмэст</b><span>Голос</span></a><a href="./region.html?id=lajdskanet"><b>Лайдсканет</b><span>Защита</span></a><a href="./region.html?id=grenteynr"><b>Грентэйнр</b><span>Клятва</span></a><a href="./region.html?id=omand"><b>Оманд</b><span>Память</span></a><a href="./region.html?id=viriif"><b>Вирьиф</b><span>Путь</span></a></div></section>
+</main><div class="toast" id="toast"></div><script src="./js/common.js?v=20261117-no-transition-1"></script><script src="./js/world-data.js"></script><script src="./js/world.js"></script><script type="module" src="./js/auth-header.js"></script><script type="module" src="./js/cms-public.js?v=20261117-no-transition-1"></script></body></html>

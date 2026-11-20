@@ -1,0 +1,177 @@
+{
+  "map_image": "assets/world/taos-map.svg",
+  "viewBox": [
+    0,
+    0,
+    4071.54,
+    4103.92
+  ],
+  "annotation_canvas": [
+    2032,
+    2048
+  ],
+  "source": "user supplied numbered positions",
+  "markers": [
+    {
+      "number": 1,
+      "id": "omand",
+      "name": "Оманд",
+      "xPercent": 44.14,
+      "yPercent": 87.94
+    },
+    {
+      "number": 2,
+      "id": "viriif",
+      "name": "Вирьиф",
+      "xPercent": 50.15,
+      "yPercent": 64.23
+    },
+    {
+      "number": 3,
+      "id": "ermest",
+      "name": "Эрмэст",
+      "xPercent": 78.42,
+      "yPercent": 61.35
+    },
+    {
+      "number": 4,
+      "id": "bughaliti",
+      "name": "Тропики Бугх’Алити",
+      "xPercent": 67.0,
+      "yPercent": 82.93
+    },
+    {
+      "number": 5,
+      "id": "fallen",
+      "name": "Падшие земли",
+      "xPercent": 32.28,
+      "yPercent": 59.16
+    },
+    {
+      "number": 6,
+      "id": "mirrun",
+      "name": "Острова Миррунд",
+      "xPercent": 77.81,
+      "yPercent": 39.4
+    },
+    {
+      "number": 7,
+      "id": "mist",
+      "name": "Мгла",
+      "xPercent": 57.5,
+      "yPercent": 53.03
+    },
+    {
+      "number": 8,
+      "id": "volcanoes",
+      "name": "Вулканы Гуррена",
+      "xPercent": 69.44,
+      "yPercent": 47.22
+    },
+    {
+      "number": 9,
+      "id": "desert",
+      "name": "Пустыня",
+      "xPercent": 23.38,
+      "yPercent": 51.42
+    },
+    {
+      "number": 10,
+      "id": "swamp",
+      "name": "Топь",
+      "xPercent": 6.69,
+      "yPercent": 31.47
+    },
+    {
+      "number": 11,
+      "id": "ashlands",
+      "name": "Земля Пепла",
+      "xPercent": 20.2,
+      "yPercent": 12.82
+    },
+    {
+      "number": 12,
+      "id": "lajdskanet",
+      "name": "Лайдсканет",
+      "xPercent": 23.72,
+      "yPercent": 26.66
+    },
+    {
+      "number": 13,
+      "id": "forgotten",
+      "name": "Забытое королевство",
+      "xPercent": 50.81,
+      "yPercent": 33.89
+    },
+    {
+      "number": 14,
+      "id": "grenteynr",
+      "name": "Грентэйнр",
+      "xPercent": 59.77,
+      "yPercent": 18.38
+    },
+    {
+      "number": 15,
+      "id": "rashhor",
+      "name": "Библиотека Раш’Хора",
+      "xPercent": 76.5,
+      "yPercent": 23.75
+    },
+    {
+      "number": 16,
+      "id": "mountains",
+      "name": "Горы",
+      "xPercent": 60.31,
+      "yPercent": 5.25
+    },
+    {
+      "number": 17,
+      "id": "cemetery",
+      "name": "Древнее кладбище",
+      "xPercent": 43.04,
+      "yPercent": 19.21
+    },
+    {
+      "number": 18,
+      "id": "icepeaks",
+      "name": "Ледяные пики",
+      "xPercent": 87.8,
+      "yPercent": 9.67
+    },
+    {
+      "number": 19,
+      "id": "karugresa",
+      "name": "Останки Ка’Ругреса",
+      "xPercent": 90.75,
+      "yPercent": 27.49
+    },
+    {
+      "number": 20,
+      "id": "starbay",
+      "name": "Звёздная бухта",
+      "xPercent": 13.24,
+      "yPercent": 64.84
+    },
+    {
+      "number": 21,
+      "id": "abyss_gate",
+      "name": "Вход в Бездну",
+      "xPercent": 9.74,
+      "yPercent": 91.06
+    },
+    {
+      "number": 22,
+      "id": "aikarrada",
+      "name": "Острова Айкаррада",
+      "xPercent": 92.67,
+      "yPercent": 85.69
+    },
+    {
+      "number": 23,
+      "id": "catacombs",
+      "name": "Заброшенные катакомбы",
+      "xPercent": 42.94,
+      "yPercent": 38.67
+    }
+  ]
+}

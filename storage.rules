@@ -1,0 +1,21 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Images are publicly visible; only accounts appointed through siteAdmins can upload.
+    match /site-assets/{userId}/{fileName} {
+      function isMaster() {
+        return request.auth != null
+          && request.auth.uid == userId
+          && firestore.exists(/databases/(default)/documents/siteAdmins/$(request.auth.uid))
+          && firestore.get(/databases/(default)/documents/siteAdmins/$(request.auth.uid)).data.enabled == true;
+      }
+      allow read: if true;
+      allow create, update: if isMaster()
+        && fileName.matches('^[a-z0-9-]+-[0-9]+[.]webp$')
+        && request.resource.size <= 5 * 1024 * 1024
+        && request.resource.contentType == 'image/webp';
+      allow delete: if isMaster();
+    }
+    match /{anyPath=**} { allow read, write: if false; }
+  }
+}

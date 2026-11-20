@@ -1,0 +1,26 @@
+<!doctype html><html lang="ru"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#070812">
+<meta name="description" content="Регистрация и вход в THAOS — Chronicles of Gods"><title>Вход и регистрация — THAOS</title>
+<link rel="stylesheet" href="./css/styles.css?v=20261117-no-transition-1"><link rel="stylesheet" href="./css/auth.css"><link rel="stylesheet" href="./css/visual-refresh.css">
+</head><body>
+<canvas id="ambientCanvas" aria-hidden="true"></canvas><div class="noise"></div>
+<header class="site-header"><a class="brand" href="./index.html"><span class="brand__mark">T</span><span class="brand__copy"><b>THAOS</b><small>Chronicles of Gods</small></span></a><nav class="nav"><a href="./classes.html">Классы</a><a href="./races.html">Расы</a><a href="./core.html">Core</a><a href="./activities.html">Активности</a><a href="./world.html">Мир</a></nav><a class="account" href="./auth.html">Вход / Регистрация</a></header>
+<main class="auth-shell">
+  <div class="auth-visual" aria-hidden="true"><img class="auth-visual__image" src="./assets/auth/thaos-abyss-auth.webp" alt="" decoding="async"><div class="auth-visual__shade"></div></div>
+  <section class="auth-story reveal"><span class="kicker">SYSTEM ACCESS // IDENTITY</span><h1>Войди в <span>Таос.</span></h1><p>Создай свою запись в Системе. После входа откроется личный кабинет: персонажи, развитие навыков, группа, карта отряда и системные уведомления.</p><div class="auth-feature"><span>Один аккаунт</span><span>Персонажи и группы</span><span>Кабинет Мастера — следующий этап</span></div></section>
+  <section class="auth-box reveal" aria-labelledby="authHeading"><span class="kicker">ACCOUNT GATE</span><h2 id="authHeading">Точка входа</h2><p class="auth-subtitle">Для начала достаточно адреса электронной почты и пароля.</p>
+    <div class="auth-tabs" role="tablist" aria-label="Выбор действия"><button type="button" role="tab" data-auth-mode="login" aria-selected="true">Войти</button><button type="button" role="tab" data-auth-mode="register" aria-selected="false">Регистрация</button></div>
+    <div class="auth-status" id="authMessage" role="status" aria-live="polite" hidden></div>
+    <form class="auth-form" id="authForm" autocomplete="on">
+      <div class="auth-field" id="authNameWrap" hidden><label for="authNickname">Имя в Таосе</label><input id="authNickname" name="displayName" autocomplete="nickname" maxlength="32" minlength="2" placeholder="Например, Странник"></div>
+      <div class="auth-field"><label for="authEmail">Электронная почта</label><input id="authEmail" type="email" name="email" autocomplete="email" required maxlength="254" placeholder="you@example.com"></div>
+      <div class="auth-field"><label for="authPassword">Пароль</label><input id="authPassword" type="password" name="password" autocomplete="current-password" minlength="8" required placeholder="Минимум 8 символов"></div>
+      <div class="auth-field" id="authConfirmWrap" hidden><label for="authConfirm">Повтори пароль</label><input id="authConfirm" type="password" name="confirm" autocomplete="new-password" minlength="8" placeholder="Повтор пароля"></div>
+      <button class="btn btn--accent" id="authSubmit" type="submit">Войти в THAOS →</button>
+    </form>
+    <button class="auth-muted-link" type="button" id="resetPassword">Забыл пароль? Восстановить доступ</button>
+    <p class="auth-privacy">Для тестирования достаточно Firebase Authentication. Перед публичным набором игроков потребуется завершить <a href="./privacy.html">политику конфиденциальности</a>.</p>
+  </section>
+</main><footer class="footer"><b>THAOS // Identity</b><span>Firebase Authentication + Cloud Firestore</span></footer><div class="toast" id="toast"></div>
+<script src="./js/common.js?v=20261117-no-transition-1"></script><script defer src="./js/hero-parallax.js"></script><script type="module" src="./js/auth-page.js"></script>
+</body></html>
