@@ -38,3 +38,7 @@ body.player-body{min-height:100svh;background:radial-gradient(circle at 74% 4%,r
  .player-print-sheet .print-name{font-size:36px;margin:0 0 12px}.player-print-sheet .print-lead{display:flex;gap:20px}.player-print-sheet .print-lead img{width:150px;max-height:200px;object-fit:cover}
  .player-print-sheet .print-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:22px 0}.player-print-sheet .print-metrics div{border:1px solid #c3cecb;padding:9px}.player-print-sheet .print-block{border-top:1px solid #d4dedb;padding:14px 0;margin-top:12px;page-break-inside:avoid}.player-print-sheet .print-muted{color:#567167}
 }
+
+/* THAOS Balance V1: reading an ability (blue) is distinct from committing it (gold). */
+.player-skill.is-preview:not(.is-selected){border-color:rgba(94,164,255,.85)!important;box-shadow:0 0 0 1px rgba(94,164,255,.35),0 0 26px rgba(60,131,235,.16)}
+.player-skill.is-preview.is-selected{box-shadow:0 0 0 1px rgba(241,203,111,.45),0 0 18px rgba(241,203,111,.15)}

@@ -33,9 +33,9 @@ try:
     assert len(lore)==5 and count == 26, (len(lore),count)
 except Exception as e:problems.append(('world-lore.json',str(e)))
 
-# CSS responsive breakpoints lost in a previous draft; explicitly guard them.
+# CSS responsive breakpoints are required. The ash transition was intentionally removed.
 style=(ROOT/'css/styles.css').read_text(encoding='utf8')
-for fragment in ['@media(max-width:1100px)','@media(max-width:760px)','prefers-reduced-motion:reduce','thaos-ash-sway']:
+for fragment in ['@media(max-width:1100px)','@media(max-width:760px)','prefers-reduced-motion:reduce']:
     if fragment not in style:problems.append(('styles.css',fragment))
 
 print(f'Pages: {len(files)}; lore: 5 states, 26 holiday records; missing references: {len(problems)}')

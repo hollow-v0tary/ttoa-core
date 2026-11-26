@@ -76,7 +76,9 @@ async function authenticate(){
         admin=snap.exists()&&snap.data()?.enabled===true;
         if(!admin){setGateMessage('Аккаунт зарегистрирован, но права Редактора ещё не назначены. Назначьте их в Firebase Console по инструкции ADMIN_SETUP.md.');$('adminEditor').hidden=true;$('adminGate').hidden=false;return;}
         $('adminGate').hidden=true;$('adminEditor').hidden=false;
-        if(!$('adminEntry').value && entries.length) $('adminEntry').value=entries[0].id;
+        const requested=new URLSearchParams(location.search).get('entry');
+        if(requested && byId.has(requested)) $('adminEntry').value=requested;
+        else if(!$('adminEntry').value && entries.length) $('adminEntry').value=entries[0].id;
         await readEntry($('adminEntry').value);
       }catch(error){setGateMessage('Не удалось проверить права Редактора. Проверьте правила Firestore: '+error.message);$('adminGate').hidden=false;$('adminEditor').hidden=true;}
     });
@@ -88,7 +90,7 @@ function fillDropdown(){
     if(last!==entry.group){last=entry.group;group=make('optgroup',{label:last});$('adminEntry').append(group)}
     group.append(make('option',{value:entry.id},entry.title));
   }
-  $('adminEntry').addEventListener('change',()=>readEntry($('adminEntry').value));
+  $('adminEntry').addEventListener('change',()=>{const u=new URL(location.href);u.searchParams.set('entry',$('adminEntry').value);history.replaceState(null,'',u.pathname+u.search);readEntry($('adminEntry').value);});
 }
 function savePayload(){
   const e=active;if(!e)throw Error('Не выбрана запись');

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#070812">
+<title>THAOS — Кабинет Руководителя</title>
+<link rel="stylesheet" href="./css/styles.css?v=20261117-no-transition-1">
+<link rel="stylesheet" href="./css/thaos-v2.css?v=20261117-no-transition-1">
+<link rel="stylesheet" href="./css/director.css?v=1">
+</head>
+<body>
+<canvas id="ambientCanvas" aria-hidden="true"></canvas><div class="noise" aria-hidden="true"></div>
+<header class="site-header"><a class="brand" href="./index.html"><span class="brand__mark">T</span><span class="brand__copy"><b>THAOS</b><small>Chronicles of Gods</small></span></a><nav class="nav"><a href="./core.html">Правила</a><a href="./classes.html">Классы</a><a href="./races.html">Расы</a><a href="./player.html">Игрок</a></nav><a class="account" href="./account.html">Мой профиль</a></header>
+<main class="director-shell">
+  <div class="director-hero"><div class="director-tag">THAOS / CONTROL ROOM / DIRECTOR</div><h1>Кабинет <em>Руководителя</em></h1><p>Центральная мастерская мира и правил. Редактируйте действующие страницы сайта и собирайте новый игровой контент в отдельном защищённом реестре.</p></div>
+  <section id="directorGate" class="director-gate" aria-live="polite"><div class="director-gate-icon">T</div><h2>Проверка полномочий</h2><p id="directorGateText">Подключаем Firebase и проверяем роль Руководителя…</p><p id="directorUid" class="director-mono" hidden></p><a class="director-link" href="./auth.html">Перейти ко входу</a></section>
+  <div id="directorApp" hidden>
+    <div class="director-bar"><span id="directorModeTag" class="director-mode">РУКОВОДИТЕЛЬ / LIVE</span><span id="directorIdentity" class="director-identity"></span><div class="director-bar-right"><a class="director-outline" href="./admin.html">Редактировать страницы сайта</a><a class="director-outline" href="./player.html">Кабинет игрока</a></div></div>
+    <div class="director-stats" id="directorStats"></div>
+    <div class="director-tabs" role="tablist" aria-label="Разделы кабинета">
+      <button type="button" class="is-active" data-view="overview" role="tab">Обзор</button>
+      <button type="button" data-view="existing" role="tab">Действующий контент</button>
+      <button type="button" data-view="registry" role="tab">Реестр разработок</button>
+      <button type="button" data-view="settings" role="tab">Настройки и экспорт</button>
+    </div>
+    <section class="director-view" data-panel="overview">
+      <div class="director-section-head"><div><span class="director-eyebrow">НАВИГАЦИЯ</span><h2>Управление THAOS</h2></div><p>Действующий контент и новые разработки разделены: изменение черновика не меняет опубликованный сайт.</p></div>
+      <div class="director-feature-grid">
+        <button type="button" data-go="existing" class="director-feature"><span class="director-feature-num">01 / CMS</span><h3>Страницы и визуальное содержание</h3><p>Классы, расы, разделы правил, мир, изображения и тексты — через действующий редактор публикаций.</p><span>Перейти к записям →</span></button>
+        <button type="button" data-go="registry" class="director-feature"><span class="director-feature-num">02 / DESIGN</span><h3>Создание игрового контента</h3><p>Навыки, Пути, вооружение, артефакты, существа, модули правил и лор в структурированном реестре.</p><span>Открыть мастерскую →</span></button>
+        <a class="director-feature" href="./player.html"><span class="director-feature-num">03 / PLAYER</span><h3>Создание персонажей</h3><p>Проверка классов, рас, стартовых комплектов и расчётных характеристик Character Builder V2.</p><span>Открыть конструктор →</span></a>
+        <button type="button" data-go="settings" class="director-feature"><span class="director-feature-num">04 / BACKUP</span><h3>Экспорт и защита данных</h3><p>Скачать резервную копию своих редакторских записей и перенести материалы между версиями.</p><span>Открыть инструменты →</span></button>
+      </div>
+      <div class="director-notice"><strong>Разделение ролей:</strong> Руководитель меняет материалы и управляет их подготовкой. Мастер будет отдельно вести кампании, энкаунтеры, NPC и награды. Право Руководителя нельзя получить через регистрацию или настройки профиля.</div>
+    </section>
+    <section class="director-view" data-panel="existing" hidden>
+      <div class="director-section-head"><div><span class="director-eyebrow">LIVE CONTENT</span><h2>Действующие страницы</h2></div><p>Редактирование этих записей действительно обновляет публичный сайт после сохранения в защищённом CMS.</p></div>
+      <div class="director-toolbar"><label class="director-search">Поиск <input id="existingSearch" type="search" placeholder="Класс, раса, регион, правило…"></label><a class="director-accent" href="./admin.html">Открыть весь визуальный редактор</a></div>
+      <div class="director-existing" id="directorExisting"></div>
+    </section>
+    <section class="director-view" data-panel="registry" hidden>
+      <div class="director-section-head"><div><span class="director-eyebrow">DEVELOPMENT REGISTRY</span><h2>Реестр разработок</h2></div><p>Создавайте черновики без изменения действующих классов и персонажей. Статус «Готово к публикации» не публикует запись автоматически.</p></div>
+      <div class="director-workspace">
+        <aside class="director-library">
+          <div class="director-library-top"><label for="draftKindFilter">Тип материала</label><select id="draftKindFilter"><option value="all">Все типы</option><option value="class">Классы</option><option value="race">Расы</option><option value="path">Пути</option><option value="skill">Навыки</option><option value="item">Предметы и оружие</option><option value="artifact">Артефакты</option><option value="rule">Правила</option><option value="region">Мир и регионы</option><option value="monster">Бестиарий</option><option value="encounter">Энкаунтеры</option></select><input id="draftSearch" type="search" placeholder="Найти запись…"><button type="button" id="draftCreate">+ Создать запись</button></div>
+          <div id="draftList" class="director-draft-list"></div>
+        </aside>
+        <div class="director-work-form">
+          <div id="directorBlank" class="director-empty"><span class="director-empty-mark">✦</span><h3>Выберите запись</h3><p>Создайте новый материал или откройте существующий черновик. Для классов и рас можно готовить альтернативные версии без изменения оригинала.</p></div>
+          <form id="draftForm" hidden>
+            <div class="director-form-head"><div><span class="director-eyebrow">EDITOR / STRUCTURED DATA</span><h3 id="draftFormHeading">Новая запись</h3></div><div class="director-form-controls"><button type="button" id="draftExportOne" class="director-subtle">JSON</button><button type="button" id="draftDelete" class="director-danger">Удалить</button></div></div>
+            <div class="director-form-grid"><label>Тип контента<select id="draftKind" required><option value="class">Класс</option><option value="race">Раса</option><option value="path">Путь</option><option value="skill">Навык</option><option value="item">Оружие / предмет</option><option value="artifact">Артефакт</option><option value="rule">Модуль правил</option><option value="region">Мир / регион</option><option value="monster">Существо</option><option value="encounter">Энкаунтер</option></select></label><label>Статус<select id="draftStatus"><option value="draft">Черновик</option><option value="review">На проверке</option><option value="ready">Готово к публикации</option></select></label><label class="director-span-2">Название<input id="draftTitle" maxlength="120" required placeholder="Например: Пожиратель душ"></label><label>Стабильный ID<input id="draftSlug" required maxlength="48" pattern="[a-z0-9][a-z0-9-]*" placeholder="soul-devourer"><small>ID создаётся один раз; после сохранения не меняется.</small></label><label>Связанный класс / регион / Путь<input id="draftParent" maxlength="64" placeholder="warrior / lajdskanet"></label><label class="director-span-2">Краткое описание<textarea id="draftSummary" maxlength="1200" rows="3" placeholder="Концепция, роль, история…"></textarea></label><label class="director-span-2">Механика / правила<textarea id="draftMechanic" maxlength="6000" rows="5" placeholder="Действие, стоимость, эффект, длительность, ограничения, тип сложения…"></textarea></label><label>Стоимость / ресурс<input id="draftCost" maxlength="120" placeholder="2 маны, 1 Малое действие"></label><label>Ограничение повторов<input id="draftLimit" maxlength="120" placeholder="1/раунд, 1/сцену"></label><label>Уровень / диапазон<input id="draftLevel" maxlength="64" placeholder="1 / 4–6 / 7–10"></label><label>Редкость / категория<input id="draftRarity" maxlength="64" placeholder="обычное, редкое, уникальное"></label><label class="director-span-2">Изображение (путь в assets)<input id="draftImage" maxlength="300" placeholder="./assets/classes/art/warrior.webp"></label></div>
+            <div class="director-blocks-head"><div><h4>Редактор содержимого</h4><p>Добавляйте заголовки, абзацы и списки; порядок можно менять.</p></div><button type="button" id="blockAdd" class="director-subtle">+ Блок</button></div>
+            <div id="directorBlocks" class="director-block-list"></div>
+            <div class="director-blocks-head"><div><h4>Предпросмотр записи</h4><p>Проверка текста без выполнения HTML.</p></div><button type="button" id="draftPreviewToggle" class="director-subtle">Показать / скрыть</button></div>
+            <div id="draftPreview" class="director-preview" hidden></div>
+            <div class="director-submit"><button type="submit" id="draftSave">Сохранить в реестре</button><span id="directorDraftInfo">Статус записи не меняет публичный сайт.</span></div>
+          </form>
+        </div>
+      </div>
+    </section>
+    <section class="director-view" data-panel="settings" hidden>
+      <div class="director-section-head"><div><span class="director-eyebrow">SAFE DATA</span><h2>Экспорт и доступ</h2></div><p>Резервные копии не включают пароли, данные других пользователей или служебные ключи.</p></div>
+      <div class="director-settings-grid"><article class="director-settings-card"><h3>Резервная копия реестра</h3><p>Скачайте только записи своего редакторского кабинета. Для восстановления предусмотрен импорт JSON с предварительной проверкой.</p><div class="director-settings-actions"><button id="directorExportAll" type="button">Скачать JSON</button><label class="director-import">Импорт JSON<input type="file" id="directorImport" accept="application/json,.json" hidden></label></div><small>Импорт не публикует записи на публичном сайте.</small></article><article class="director-settings-card"><h3>Права доступа</h3><p>Полномочия выдаются в Firebase Console документом <code>siteAdmins/{uid}</code> с полем <code>enabled: true</code>. Посетители не могут назначить себе роль.</p><a href="./ADMIN_SETUP.md" class="director-link">Инструкция по роли Руководителя</a></article><article class="director-settings-card"><h3>Действующие страницы</h3><p>Отдельный редактор уже умеет менять описания классов, рас, правила, регионы и поддерживаемые изображения. Публикация новых структурных записей в публичные каталоги потребует отдельной миграции.</p><a class="director-link" href="./admin.html">Открыть редактор страниц →</a></article></div>
+    </section>
+    <div id="directorToast" class="director-toast" role="status" aria-live="polite" hidden></div>
+  </div>
+</main>
+<footer class="footer"><b>THAOS / DIRECTOR</b><span>Защищённая мастерская игровых данных</span></footer>
+<script src="./js/race-data.js"></script><script src="./js/class-data.js"></script><script src="./js/world-data.js"></script><script src="./js/common.js?v=20261117-no-transition-1"></script>
+<script type="module" src="./js/director.js"></script>
+</body></html>

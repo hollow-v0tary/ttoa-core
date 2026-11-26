@@ -22,6 +22,10 @@ if (!firebaseIsConfigured) {
       if (!user) { location.replace('./auth.html'); return; }
       currentUser = user;
       $('accountLoading').hidden = true;
+      try {
+        const roleDoc=await result.firestoreSdk.getDoc(result.firestoreSdk.doc(result.db,'siteAdmins',user.uid));
+        $('directorAccountLink').hidden=!(roleDoc.exists() && roleDoc.data()?.enabled===true);
+      } catch { $('directorAccountLink').hidden=true; }
       detail.hidden = false;
       $('profileName').textContent = user.displayName || 'Путешественник';
       $('profileEmail').textContent = user.email || '—';

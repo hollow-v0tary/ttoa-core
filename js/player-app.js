@@ -5,9 +5,13 @@ import { getFirebaseClient } from './firebase-client.js';
    Firestore remains the source of truth; no GM/admin authority is granted here. */
 const $ = id => document.getElementById(id);
 const main = $('playerContent');
-const defaults = () => ({name:'',bio:'',raceId:'',classId:'',level:1,attributes:{Сила:1,Ловкость:1,Телосложение:1,Интеллект:1,Мудрость:1,Харизма:1},baseSkills:[],pathIndex:-1,pathSkills:[],health:0,healthMax:0,mana:5,manaMax:5,speed:0,defense:0,artData:'',inventory:[],equipped:[]});
+const defaults = () => ({name:'',bio:'',raceId:'',classId:'',level:1,attributes:{Сила:1,Ловкость:1,Телосложение:1,Интеллект:1,Мудрость:1,Харизма:1},attrBase:{Сила:1,Ловкость:1,Телосложение:1,Интеллект:1,Мудрость:1,Харизма:1},attrBoosts:{},baseSkills:[],pathIndex:-1,pathSkills:[],kitId:'',raceChoice:'Огонь',health:0,healthMax:0,mana:0,manaMax:0,speed:5,defense:22,artData:'',inventory:[],equipped:[]});
 const state={client:null,user:null,characters:[],selectedId:null,settings:{activeCharacterId:null,partyId:null,pendingPartyId:null},party:null,roster:[],requests:[],request:null,announcements:[],newsletter:false,editor:false,draft:null,step:0,skillFocus:null,mapSelected:null,mapNoteDraft:null,groupArt:'',groupDraftName:'',groupDraftDescription:'',partyJoinCode:'',busy:false,unsubs:[],partyUnsubs:[],noticeTimer:null};
 const CL=window.THAOS_CLASSES||[],RA=window.THAOS_RACES||[],Z=window.THAOS_WORLD?.zones||[];
+const BR=window.THAOS_BALANCE;
+const BK=window.THAOS_BUILDER_ENGINE;
+const choiceSkills=cl=>BR?.selectableBaseSkills(cl)||cl?.skills||[];
+const innateSkill=cl=>BR?.getFreeSkill(cl?.id)||null;
 const getClass=id=>CL.find(c=>c.id===id),getRace=id=>RA.find(r=>r.id===id),getZone=id=>Z.find(z=>z.id===id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeArt=x=>typeof x==='string' && /^data:image\/(?:webp|jpeg);base64,[A-Za-z0-9+/=]+$/.test(x) && x.length<170000 ? x : '';
@@ -22,12 +26,12 @@ function toggleBusy(v){state.busy=v;document.querySelectorAll('[data-action="sav
 const card=(title,body,cls='')=>`<article class="player-card ${cls}">${title?`<h2>${esc(title)}</h2>`:''}${body}</article>`;
 const btn=(label,action,cls='',extra='')=>`<button class="player-button ${cls}" type="button" data-action="${action}" ${extra}>${label}</button>`;
 const inp=(name,label,value='',type='text',extra='')=>`<div class="player-field"><label for="field-${name}">${esc(label)}</label><input class="player-input" id="field-${name}" data-field="${name}" type="${type}" value="${esc(value)}" ${extra}></div>`;
-function view(){const k=(location.hash||'#characters').slice(1),known=['characters','group','map','tools','dashboard'];return known.includes(k)?k:'characters'}
-function updateNav(){const tab=view(),titles={characters:['Персонажи','Создавайте, развивайте и сохраняйте героев своей истории.'],group:['Группа','Объединяйтесь с другими игроками и отслеживайте состояние отряда.'],map:['Карта отряда','Исследуйте Таос и сохраняйте местоположение группы.'],tools:['Инструменты','Торговля, кузница и сундуки активируются Мастером во время игры.'],dashboard:['Панель','Ваши персонажи, группа, уведомления и настройки обновлений.']};$('playerSectionTitle').textContent=titles[tab][0];$('playerSectionSubtitle').textContent=titles[tab][1];$('playerBreadcrumb').textContent='СИСТЕМА / ИГРОК / '+titles[tab][0].toUpperCase();document.querySelectorAll('[data-tab]').forEach(x=>{const a=x.dataset.tab===tab;x.classList.toggle('is-active',a);x.setAttribute('aria-current',a?'page':'false')});}
+function view(){if(document.body.dataset.builderDemo==='true')return 'characters';const k=(location.hash||'#characters').slice(1),known=['characters','group','map','tools','dashboard'];return known.includes(k)?k:'characters'}
+function updateNav(){const tab=view(),titles={characters:['Персонажи','Создавайте, развивайте и сохраняйте героев своей истории.'],group:['Группа','Объединяйтесь с другими игроками и отслеживайте состояние отряда.'],map:['Карта отряда','Исследуйте Таос и сохраняйте местоположение группы.'],tools:['Инструменты','Торговля, кузница и сундуки активируются Мастером во время игры.'],dashboard:['Панель','Ваши персонажи, группа, уведомления и настройки обновлений.']};$('playerSectionTitle').textContent=document.body.dataset.builderDemo==='true'?'Конструктор персонажа V2':titles[tab][0];$('playerSectionSubtitle').textContent=document.body.dataset.builderDemo==='true'?'Семь шагов создания персонажа — без входа и без сохранения в облако.':titles[tab][1];$('playerBreadcrumb').textContent='СИСТЕМА / ИГРОК / '+titles[tab][0].toUpperCase();document.querySelectorAll('[data-tab]').forEach(x=>{const a=x.dataset.tab===tab;x.classList.toggle('is-active',a);x.setAttribute('aria-current',a?'page':'false')});}
 function render(){updateNav();if(!state.user)return;const page=view();main.hidden=false;main.className='player-content-enter';main.innerHTML=({characters:renderCharacters,group:renderGroup,map:renderMap,tools:renderTools,dashboard:renderDashboard}[page])();if(state.editor&&page==='characters')main.querySelector('[data-autofocus]')?.focus({preventScroll:true});}
 function pathInfo(c,index){return window.THAOS_PATH_CONTENT?.[c.id]?.[index]||null}
-function skillsAt(level){return Math.min(3,Math.max(1,Number(level)||1))}
-function pathAt(level){return level<4?0:level<6?1:2}
+function skillsAt(level){return BK.skillCount(level)}
+function pathAt(level){return BK.pathCount(level)}
 function attrUsed(attrs){return Object.values(attrs).reduce((s,n)=>s+(n*(n-1)/2),0)}
 function artOrPlaceholder(x,cls=''){return safeArt(x)?`<img class="${cls}" src="${safeArt(x)}" alt="Арт персонажа">`:`<div class="${cls} player-artdrop" aria-hidden="true">✦<br>THAOS</div>`}
 function renderCharacters(){if(state.editor&&state.draft)return renderEditor();if(state.selectedId){const c=state.characters.find(x=>x.id===state.selectedId);if(c)return renderCharacterDetail(c)}
@@ -35,27 +39,65 @@ function renderCharacters(){if(state.editor&&state.draft)return renderEditor();i
 function renderCharacterDetail(c){const cl=getClass(c.classId),race=getRace(c.raceId);const attrs=Object.entries(c.attributes||{}).map(([n,v])=>`<span class="player-pill">${esc(n)} ${v}</span>`).join(' ');
  return `<div class="player-row player-row--between player-row--wrap" style="margin-bottom:20px"><button class="player-button" data-action="back-characters">← Мои персонажи</button><div class="player-row player-row--wrap">${btn('Активный','activate-character','',`data-id="${esc(c.id)}" ${activeChar()?.id===c.id?'disabled':''}`)}${btn('Пересобрать','edit-character','',`data-id="${esc(c.id)}"`)}${btn('Улучшить','level-up','player-button--gold',`data-id="${esc(c.id)}"`)}${btn('Скачать лист','export-sheet','player-button--primary',`data-id="${esc(c.id)}"`)}</div></div>
  <div class="player-grid"><article class="player-card player-card--glow"><div class="player-portrait-layout">${artOrPlaceholder(c.artData,'player-portrait-large')}<div><span class="player-kicker">CHARACTER FILE // ${esc(c.id.slice(0,8).toUpperCase())}</span><h2 class="player-character-title">${esc(c.name)}</h2><p class="player-tagline">${esc(race?.name)} · ${esc(cl?.name)} · ${c.level} уровень</p>${c.level>=4?`<p>${esc(cl?.paths?.[c.pathIndex]||'Путь не выбран')}</p>`:''}<div class="player-row player-row--wrap">${attrs}</div><div class="player-rule"></div><p class="player-bio">${esc(c.bio||'История персонажа ещё не написана.')}</p></div></div></article>
- <article class="player-card"><div class="player-section-title"><h2>Характеристики</h2><span class="player-pill player-pill--green">${state.settings.activeCharacterId===c.id?'Активный':'Архив'}</span></div><div class="player-metrics">${metric('Здоровье',`${c.health||0}/${c.healthMax||0}`)}${metric('Мана',`${c.mana??5}/${c.manaMax??5}`)}${metric('Скорость',`${c.speed||'—'} м`)}${metric('Защита',c.defense||'—')}</div><div class="player-rule"></div><h3>Навыки</h3><p><b>Базовые:</b> ${esc((c.baseSkills||[]).join(', ')||'Не выбраны')}</p><p><b>Путь:</b> ${esc((c.pathSkills||[]).join(', ')||'Ещё закрыт')}</p>${c.level>=7?'<span class="player-pill player-pill--gold">VII · Перелом</span>':''}<div class="player-rule"></div><p class="player-small">Параметры Здоровья, Скорости и Защиты пока вводятся вручную: утверждённые формулы ещё не внесены в Core.</p></article></div>
+ <article class="player-card"><div class="player-section-title"><h2>Характеристики</h2><span class="player-pill player-pill--green">${state.settings.activeCharacterId===c.id?'Активный':'Архив'}</span></div><div class="player-metrics">${metric('Здоровье',`${c.health||0}/${c.healthMax||0}`)}${metric('Мана',`${c.mana??5}/${c.manaMax??5}`)}${metric('Скорость',`${c.speed||'—'} м`)}${metric('Защита',c.defense||'—')}</div><div class="player-rule"></div><h3>Навыки</h3><p><b>Базовая способность:</b> ${esc(innateSkill(cl)||'Нет')}</p><p><b>Выбранные навыки:</b> ${esc((c.baseSkills||[]).join(', ')||'Не выбраны')}</p><p><b>Путь:</b> ${esc((c.pathSkills||[]).join(', ')||'Ещё закрыт')}</p>${c.level>=7?'<span class="player-pill player-pill--gold">VII · Перелом</span>':''}<div class="player-rule"></div><p class="player-small">${c.schemaVersion===2?'Характеристики рассчитаны по тестовому ядру Core Math 1.2; условные эффекты не включены.':'Старый лист V1: откройте «Пересобрать», чтобы перейти на расчётную модель V2.'}</p><p><strong>Стартовый комплект:</strong> ${esc((c.progression?.levelHistory||[]).find(x=>x.type==='starterKit')?.kitId?kitName((c.progression?.levelHistory||[]).find(x=>x.type==='starterKit').kitId):'Не указан')}</p>${c.level>=7&&!c.progression?.breakthroughCompleted?'<p class="player-small">Перелом ожидает выбора Мастера.</p>':''}</article></div>
  <div class="player-row player-row--wrap" style="margin-top:20px">${btn('Скачать HTML-лист','download-html','',`data-id="${esc(c.id)}"`)}${btn('Скачать JSON','download-json','',`data-id="${esc(c.id)}"`)}${btn('Удалить персонажа','delete-character','player-button--danger',`data-id="${esc(c.id)}"`)}</div>`}
 function metric(label,value){return `<div class="player-metric"><small>${esc(label)}</small><b>${esc(value)}</b></div>`}
-function renderEditor(){const c=state.draft,cl=getClass(c.classId),r=getRace(c.raceId),steps=['Облик','Раса и класс','Навыки','Атрибуты','Подтверждение'];let body='';
- if(state.step===0){body=`<div class="player-grid--equal player-grid"><section class="player-stack">${inp('name','Имя персонажа',c.name,'text','maxlength="40" placeholder="Например, Арден"')}${inp('bio','Краткая история',c.bio,'text','maxlength="400" placeholder="Чего хочет твой герой?"')}<div class="player-field"><label>Изображение персонажа</label><label class="player-artdrop" for="playerArtInput"><span style="font-size:29px">◇</span><b>Нажми или перетащи арт</b><span>JPG, PNG или WebP · оптимизация до ~80 КБ</span><input type="file" id="playerArtInput" accept="image/png,image/jpeg,image/webp" data-upload="character"></label><span class="player-image-hint">Временное решение для Spark: уменьшенный арт сохраняется в Firestore вместе с персонажем.</span></div></section><div class="player-card" style="display:grid;place-items:center">${artOrPlaceholder(c.artData,'player-portrait-large')}${c.artData?btn('Убрать арт','remove-art'):''}</div></div>`}
- if(state.step===1){body=`<div class="player-form-grid"><div class="player-field"><label>Раса</label><select class="player-select" data-field="raceId"><option value="">Выберите расу</option>${RA.map(x=>`<option value="${esc(x.id)}" ${x.id===c.raceId?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div><div class="player-field"><label>Базовый класс</label><select class="player-select" data-field="classId"><option value="">Выберите класс</option>${CL.map(x=>`<option value="${esc(x.id)}" ${x.id===c.classId?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div><div class="player-field"><label>Уровень: ${c.level}</label><input type="range" min="1" max="10" value="${c.level}" data-field="level" style="accent-color:#94dbaf;width:100%;margin-top:15px"><span class="player-small">Можно повышать уровень, а затем открывать навыки по этапам.</span></div><div class="player-field"><label>Пассивная особенность расы</label><p>${esc(r?.passive||'Сначала выберите расу.')}: ${esc(r?.effect||'')}</p></div></div>${cl?`<div class="player-gate is-open"><span class="player-gate__emblem">✦</span><div><b>${esc(cl.name)} · ${esc(cl.role)}</b><p style="margin:6px 0 0">${esc(cl.desc)}</p></div></div>`:''}`}
- if(state.step===2){body=renderSkills(c,cl)}
- if(state.step===3){body=renderAttributes(c)}
- if(state.step===4){body=`<div class="player-grid"><div class="player-card player-card--glow"><div class="player-portrait-layout">${artOrPlaceholder(c.artData,'player-portrait-large')}<div><span class="player-kicker">PREVIEW // CHARACTER</span><h2 class="player-character-title">${esc(c.name||'Без имени')}</h2><p>${esc(r?.name||'Без расы')} · ${esc(cl?.name||'Без класса')} · уровень ${c.level}</p><p>Базовые навыки: ${(c.baseSkills||[]).length} / ${skillsAt(c.level)}</p><p>Путь: ${esc(cl?.paths?.[c.pathIndex]||'Не выбран')}</p><p>Навыки Пути: ${(c.pathSkills||[]).length} / ${pathAt(c.level)}</p><p>Очки атрибутов: ${attrUsed(c.attributes||{})} / 8</p></div></div></div><div class="player-card"><h2>Боевые параметры</h2><p class="player-small">Формулы ещё уточняются. Заполните эти значения вручную по решению Мастера, не полагаясь на выдуманный автоматический расчёт.</p><div class="player-form-grid">${inp('healthMax','Макс. здоровье',c.healthMax,'number','min="0" max="9999"')}${inp('health','Текущее здоровье',c.health,'number','min="0" max="9999"')}${inp('manaMax','Макс. мана',c.manaMax,'number','min="0" max="9999"')}${inp('mana','Текущая мана',c.mana,'number','min="0" max="9999"')}${inp('speed','Скорость, м',c.speed,'number','min="0" max="100"')}${inp('defense','Защита',c.defense,'number','min="0" max="100"')}</div></div></div>`}
- return `<div class="player-row player-row--between player-row--wrap" style="margin-bottom:18px"><span class="player-kicker">CHARACTER BUILDER // ${state.selectedId?'РЕДАКТИРОВАНИЕ':'НОВЫЙ ГЕРОЙ'}</span>${btn('Отменить','cancel-editor')}</div><nav class="player-steps" aria-label="Этапы создания">${steps.map((t,i)=>`<button class="player-step ${i===state.step?'is-active':''}" data-action="edit-step" data-step="${i}">${String(i+1).padStart(2,'0')} ${t}</button>`).join('')}</nav><div class="player-stack">${body}<div class="player-row player-row--between player-row--wrap" style="margin-top:16px">${btn('← Назад','prev-step','',state.step===0?'disabled':'')}<div class="player-row player-row--wrap">${state.step===4?btn('Сохранить в Firebase','save-character','player-button--primary'):btn('Продолжить →','next-step','player-button--primary')}</div></div></div>`}
-function renderSkills(c,cl){if(!cl)return card('Выберите класс',`<p>Сначала на предыдущем этапе выберите класс героя.</p>`);
- const need=skillsAt(c.level),complete=(c.baseSkills||[]).length===need,available=(c.baseSkills||[]),pathName=cl.paths?.[c.pathIndex],path=pathInfo(cl,c.pathIndex),count=pathAt(c.level),pathComplete=c.level>=4 && c.pathIndex>=0 && c.pathSkills.length===count;
- let f=`<section class="player-skill-stage ${complete?'is-done':''}"><div class="player-stage-head"><div><span class="player-kicker">1–3 // БАЗОВЫЙ КЛАСС</span><h3>${esc(cl.name)}</h3></div><span class="player-stage-counter">Выбрано ${available.length} / ${need}</span></div><div class="player-skill-grid">${cl.skills.map((sk,i)=>{const on=available.includes(sk),locked=!on&&available.length>=need;return `<button type="button" class="player-skill ${on?'is-selected':''}" data-action="toggle-base" data-skill="${i}" ${locked?'disabled':''} aria-pressed="${on}"><span class="player-skill__symbol">${String(i+1).padStart(2,'0')}</span><span class="player-skill__name">${esc(sk)}</span>${on?'<span class="player-skill__check">✓</span>':''}</button>`}).join('')}</div>${state.skillFocus?.type==='base'?`<div class="player-skill-detail"><b>${esc(state.skillFocus.name)}</b><p>${esc(state.skillFocus.desc||'Специфика этого навыка описана в досье класса.')}</p></div>`:''}</section>`;
- if(complete)f+='<div class="player-gold-link" aria-hidden="true"></div>';
- const canPath=c.level>=4&&complete;
- f+=`<div class="player-gate ${canPath?'is-open':''}"><span class="player-gate__emblem">${canPath?'✦':'◇'}</span><div><b>${canPath?'Путь открыт: уровни 4–6':c.level<4?'Уровни 4–6 · откроются на уровне 4':'Завершите базовые навыки'}</b><p style="margin:6px 0 0">${canPath?'Выберите один из Путей своего класса, затем навыки выбранного Пути.':'Путь недоступен, пока не выполнены условия предыдущего этапа.'}</p></div></div>`;
- if(canPath){f+=`<section class="player-skill-stage"><div class="player-stage-head"><h3>Выберите Путь</h3><span class="player-stage-counter">${c.pathIndex>=0?'Выбран':'Не выбран'}</span></div><div class="player-path-grid">${cl.paths.map((name,i)=>`<button type="button" class="player-path ${c.pathIndex===i?'is-selected':''} ${i===4?'is-hidden':''}" data-action="choose-path" data-path="${i}" ${i===4&&c.pathIndex!==4?'disabled title="Открывается по решению Мастера"':''}>${i===4&&c.pathIndex!==4?'◇ ??? · Скрытый Путь':esc(name)}</button>`).join('')}</div>${path?`<div class="player-skill-detail"><b>${esc(pathName)}</b><p>${esc(path.summary)} ${esc(path.gameplay)}</p></div>`:''}</section>`;
- if(pathName){const options=path?.skills||[],selected=c.pathSkills||[];f+=`<section class="player-skill-stage ${pathComplete?'is-done':''}"><div class="player-stage-head"><div><span class="player-kicker">4–6 // ${esc(pathName)}</span><h3>Навыки Пути</h3></div><span class="player-stage-counter">Выбрано ${selected.length} / ${count}</span></div><div class="player-skill-grid player-skill-grid--path">${options.map((sk,i)=>{const on=selected.includes(sk),locked=!on&&selected.length>=count;return `<button type="button" class="player-skill player-skill--path ${on?'is-selected':''}" data-action="toggle-path" data-skill="${i}" ${locked?'disabled':''}><span class="player-skill__symbol"><b>${String(i+1).padStart(2,'0')}</b></span><span class="player-skill__name">${esc(sk)}</span>${on?'<span class="player-skill__check">✓</span>':''}</button>`}).join('')}</div>${state.skillFocus?.type==='path'?`<div class="player-skill-detail"><b>${esc(state.skillFocus.name)}</b><p>${esc(path?.summary||'Навык Пути.')}</p></div>`:''}</section>`;}}
- const unlocked=c.level>=7&&pathComplete;if(c.level>=7){if(unlocked)f+='<div class="player-gold-link" aria-hidden="true"></div>';f+=`<div class="player-gate ${unlocked?'is-open':''}"><span class="player-gate__emblem">Ⅶ</span><div><b>${unlocked?'VII · Перелом открыт':'VII · Перелом заблокирован'}</b><p style="margin:6px 0 0">${unlocked?'Перелом доступен. Истинные классы и навыки 8–10 добавим после утверждения их точных веток; случайные варианты не подставляются.':'Сначала нужно завершить выбор навыков Пути.'}</p></div></div>`}
- return f}
-function renderAttributes(c){const attrs=c.attributes,spent=attrUsed(attrs),left=8-spent;return `<div class="player-grid"><article class="player-card"><div class="player-section-title"><h2>Атрибуты</h2><span class="player-pill ${left===0?'player-pill--green':''}">Осталось ${left} / 8 очков</span></div><p>Каждый атрибут начинается с 1. Повышение до 2 стоит 1 очко, до 3 — ещё 2, до 4 — ещё 3. Лимит при создании — 4.</p><div class="player-attr-grid">${Object.entries(attrs).map(([name,v])=>`<div class="player-attr"><b>${esc(name)}</b><div class="player-attr__controls"><button type="button" data-action="attr-down" data-attr="${esc(name)}" ${v<=1?'disabled':''}>−</button><span class="player-attr__value">${v}</span><button type="button" data-action="attr-up" data-attr="${esc(name)}" ${v>=4||left<v?'disabled':''}>+</button></div></div>`).join('')}</div></article>${card('Итоговый лист',`<div class="player-metrics">${metric('Уровень',c.level)}${metric('Мана',c.manaMax)}${metric('Потрачено',spent+'/8')}${metric('Навыки',c.baseSkills.length)}</div><p>Для сохранения необходимо распределить все 8 очков. Дополнительные очки от повышения уровня в этой версии пока не рассчитываются автоматически, чтобы не подменять ещё не утверждённые правила.</p>`,'player-card--glow')}</div>`}
+// Character Builder V2 — seven authored steps. Character data is local until save.
+const BSTEP=['Облик','Уровень','Раса','Класс','Навыки','Атрибуты','Подтверждение'];
+const BSTATUSES={source:'Исходное описание','balance-v1':'Тестовая механика','new_candidate':'Тестовая механика','needs-numbers':'Нужна механика'};
+const BART_RACE = id => `./assets/races/art/${encodeURIComponent(id)}.webp`;
+const BART_CLASS = id => `./assets/classes/art/${encodeURIComponent(id)}.webp`;
+function kitName(id){return BK.kit(id)?.label||'Комплект не выбран'}
+function kitFor(c){return BK.kit(c.kitId)}
+function editorStats(c){return BK.calc(c)}
+function syncAttrs(c){c.attributes=BK.calculateAttrs(c.attrBase,c.attrBoosts)}
+function needsAttributeIncrease(c,level){return c.level>=level}
+function editorNav(){const c=state.draft;return `<nav class="b2-steps" aria-label="Этапы создания">${BSTEP.map((name,i)=>`<button type="button" class="b2-step ${i===state.step?'is-active':''} ${i<state.step?'is-visited':''}" data-action="edit-step" data-step="${i}" aria-current="${i===state.step?'step':'false'}"><b>${String(i+1).padStart(2,'0')}</b><span>${esc(name)}</span></button>`).join('')}</nav>`}
+function viewOrb(level){const earth=level<=5;return `<div class="b2-level-stage"><div class="b2-orbits"><button type="button" data-action="level-orbit" data-orbit="earth" class="b2-orb b2-earth ${earth?'is-current':''}" aria-label="Земля, уровни 1–5"><span class="b2-orb-ring"></span><span class="b2-orb-body"></span><span class="b2-orb-label">ЗЕМЛЯ</span><small>УРОВНИ 01—05</small></button><button type="button" data-action="level-orbit" data-orbit="moon" class="b2-orb b2-moon ${!earth?'is-current':''}" aria-label="Луна, уровни 6–10"><span class="b2-orb-ring"></span><span class="b2-orb-body"></span><span class="b2-orb-label">ЛУНА</span><small>УРОВНИ 06—10</small></button></div><div class="b2-level-selection"><span class="player-kicker">ЭТАП РАЗВИТИЯ</span><div class="b2-level-number">${String(level).padStart(2,'0')}</div><div class="b2-level-chooser"><button type="button" data-action="level-minus" ${level<=1?'disabled':''} aria-label="Уменьшить уровень">−</button><input id="b2-level-range" aria-label="Уровень персонажа" type="range" min="1" max="10" value="${level}" data-field="level"><button type="button" data-action="level-plus" ${level>=10?'disabled':''} aria-label="Повысить уровень">+</button></div><div class="b2-level-dots">${Array.from({length:10},(_,i)=>`<button type="button" data-action="level-direct" data-level="${i+1}" aria-label="${i+1} уровень" class="${level===i+1?'is-current':''}">${i+1}</button>`).join('')}</div><p>${level<=3?'Базовый класс: открываются стартовые навыки.':level<7?'Путь: специализация и два навыка Пути.':'Перелом: выбор Истинного класса остаётся мастерским контентом, пока не опубликованы его механики.'}</p><small>Прокрути колёсико над кругами или выбери число. Уровень влияет на HP, ману, Защиту, атрибуты и доступные навыки.</small></div></div>`}
+function raceCards(c){const race=getRace(c.raceId);return `<div class="b2-choice-layout"><section><div class="b2-choice-grid">${RA.map(x=>`<button type="button" data-action="pick-race" data-id="${esc(x.id)}" class="b2-art-card ${c.raceId===x.id?'is-chosen':''}"><img loading="lazy" src="${BART_RACE(x.id)}" alt=""><span class="b2-art-caption">${esc(x.name)}</span>${c.raceId===x.id?'<span class="b2-picked">ВЫБРАНО</span>':''}</button>`).join('')}</div><p class="b2-hint">Пепельник зарезервирован как будущая 13-я раса, но пока не доступен для создания.</p></section><aside class="b2-choice-info">${race?`<img class="b2-detail-art" src="${BART_RACE(race.id)}" alt=""><div class="player-kicker">РАСОВАЯ ОСОБЕННОСТЬ</div><h2>${esc(race.name)}</h2><h3>${esc(race.passive||'Особенность')}</h3><p>${esc(race.effect||race.desc||'Расовое описание в справочнике THAOS.')}</p><p><strong>Скорость:</strong> 5 ${BK.race(race.id)?.speedModifier>0?'+':''}${BK.race(race.id)?.speedModifier||0} м до экипировки.</p>${race.id==='dragonborn'?`<label class="b2-field">Драконья кровь — выбрать сопротивление<select class="player-select" data-field="raceChoice">${['Огонь','Холод','Молния'].map(e=>`<option value="${e}" ${c.raceChoice===e?'selected':''}>${e}</option>`).join('')}</select></label>`:''}`:`<div class="b2-empty-selection">Выберите расу, чтобы увидеть её особенности и поправку к Скорости.</div>`}</aside></div>`}
+function classCards(c){const cl=getClass(c.classId);const classStats=BK.C(c.classId);return `<div class="b2-choice-layout"><section><div class="b2-choice-grid">${CL.map(x=>`<button type="button" data-action="pick-class" data-id="${esc(x.id)}" class="b2-art-card ${c.classId===x.id?'is-chosen':''}"><img loading="lazy" src="${BART_CLASS(x.id)}" alt=""><span class="b2-art-caption">${esc(x.name)}</span>${c.classId===x.id?'<span class="b2-picked">ВЫБРАНО</span>':''}</button>`).join('')}</div><p class="b2-hint">«Пожиратель душ» запланирован как 14-й основной класс. Его механика пока в разработке, поэтому выбор недоступен.</p></section><aside class="b2-choice-info">${cl?`<img class="b2-detail-art" src="${BART_CLASS(cl.id)}" alt=""><div class="player-kicker">БАЗОВЫЙ КЛАСС</div><h2>${esc(cl.name)}</h2><p>${esc(cl.desc)}</p><p><strong>Боевая роль:</strong> ${esc(cl.combatRole||cl.role)}</p><p><strong>Стартовая мана:</strong> ${classStats?.manaStart??5} · <strong>прирост:</strong> +${classStats?.manaPerLevel??1}/уровень</p><p><strong>Ресурс:</strong> ${esc(cl.resource||'—')}</p><p><strong>Стандартных наборов:</strong> 2</p>`:`<div class="b2-empty-selection">Выберите класс. От него зависят запас маны, способности и доступные стартовые комплекты.</div>`}</aside></div>`}
+function renderSkillChoice(type,c,cl){
+  const base=type==='base';
+  const path=window.THAOS_PATH_CONTENT?.[cl.id]?.[c.pathIndex];
+  const options=base?choiceSkills(cl):(path?.skills||[]);
+  const selected=base?c.baseSkills:c.pathSkills;
+  const limit=base?BK.skillCount(c.level):BK.pathCount(c.level);
+  const focus=state.skillFocus?.type===type?state.skillFocus:null;
+  const focusIndex=focus?options.indexOf(focus.name):-1;
+  const skillData=base&&focus?BR?.getSkill(cl.id,focus.name):null;
+  return `<section class="b2-skill-region"><div class="b2-stage-head"><div><div class="player-kicker">${base?'1—3 / БАЗОВЫЕ НАВЫКИ':'4—6 / НАВЫКИ ПУТИ'}</div><h3>${base?'Навыки класса':cl.paths[c.pathIndex]}</h3></div><span class="player-pill">${selected.length} / ${limit}</span></div>${base&&BK.autoSkills(cl.id).length?`<div class="b2-auto-skill"><b>Автоматически с 1-го уровня:</b> ${BK.autoSkills(cl.id).map(x=>esc(x)).join(', ')}. Не занимает слот навыка.</div>`:''}<div class="b2-skills-layout"><div class="b2-skills-list">${options.map((name,i)=>{const on=selected.includes(name),view=focus?.name===name;return `<button type="button" data-action="${base?'preview-base':'preview-path'}" data-skill="${i}" class="b2-skill-tile ${view?'is-viewed':''} ${on?'is-kept':''}" aria-pressed="${on}"><span class="b2-skill-icon">${String(i+1).padStart(2,'0')}</span><span>${esc(name)}</span>${on?'<b class="b2-gold-tag">ВЫБРАНО</b>':''}</button>`}).join('')}</div><div class="b2-skill-info">${focus&&focusIndex>=0?`<div class="player-kicker">${selected.includes(focus.name)?'ЗАКРЕПЛЕНО':'ПРОСМОТР'}</div><h3>${esc(focus.name)}</h3>${base?`<p><b>Описание:</b> ${esc(skillData?.text||'См. досье класса.')}</p><p><b>Механика:</b> ${esc(skillData?.mechanics||'Механика пока не определена.')}</p><p><b>Ограничение:</b> ${esc(skillData?.limits||'Не определено')}</p><p class="b2-small-status">${esc(BSTATUSES[skillData?.status]||'Описание из Core')}</p>`:`<p><b>Стиль Пути:</b> ${esc(path?.gameplay||path?.summary||'')}</p><p><b>Механика:</b> индивидуальный численный эффект навыка Пути ещё не опубликован. Он не включается в автоматический расчёт характеристик.</p>`}<button type="button" class="player-button ${selected.includes(focus.name)?'player-button--gold':'player-button--primary'}" data-action="${base?'toggle-base':'toggle-path'}" data-skill="${focusIndex}" ${!selected.includes(focus.name)&&selected.length>=limit?'disabled':''}>${selected.includes(focus.name)?'Убрать закрепление':'Закрепить навык'}</button>`:`<div class="b2-empty-selection">Выберите навык слева. <strong>Синее</strong> выделение означает просмотр, <strong>золотое</strong> — окончательный выбор.</div>`}</div></div></section>`;
+}
+function renderSkillStage(c,cl){if(!cl)return `<div class="b2-empty-selection">Сначала выберите класс персонажа.</div>`;
+ let content=renderSkillChoice('base',c,cl);
+ if(c.level>=4){
+   content+=`<section class="b2-skill-region"><div class="b2-stage-head"><div><div class="player-kicker">УРОВЕНЬ 04 / ПУТЬ</div><h3>Выбор специализации</h3></div><span class="player-pill">${c.pathIndex>=0?'Путь выбран':'Не выбран'}</span></div><div class="b2-paths-grid">${cl.paths.map((n,i)=>`<button type="button" data-action="choose-path" data-path="${i}" class="b2-path ${c.pathIndex===i?'is-chosen':''}" ${i===4&&c.pathIndex!==4?'disabled title="Открывает Мастер"':''}>${i===4&&c.pathIndex!==4?'Скрытый Путь · ???':esc(n)}</button>`).join('')}</div>${c.pathIndex>=0?`<p>${esc(pathInfo(cl,c.pathIndex)?.summary||'')}</p><p class="b2-hint">Пассивная особенность Пути открывается автоматически на 4-м уровне; отдельные точные эффекты будут добавлены после публикации.</p>`:''}</section>`;
+   if(c.pathIndex>=0)content+=renderSkillChoice('path',c,cl);
+ }
+ if(c.level>=7){content+=`<section class="b2-skill-region b2-true-class"><div class="player-kicker">УРОВЕНЬ 07 / ПЕРЕЛОМ</div><h3>Истинный класс и общая пассивная способность Пути</h3><p>На 7-м уровне открываются общий пассивный навык Пути и Истинный класс. На 8-м и 9-м выбираются его способности, а на 10-м открывается завершающая способность.</p><p>Индивидуальные ветви и механика Истинных классов ещё не полностью представлены в текущих данных THAOS. Вы можете сохранить персонажа как <strong>незавершённый черновик</strong>, но редактор не будет придумывать эти способности и считать их активными.</p></section>`}
+ return content;
+}
+function renderAttributesV2(c){const attrs=c.attrBase||BK.initBaseAttrs(c.attributes),spent=BK.pointCost(attrs),left=8-spent;
+ return `<section class="b2-skill-region"><div class="b2-stage-head"><div><div class="player-kicker">СТАРТОВЫЕ АТРИБУТЫ</div><h3>Распределение очков</h3></div><span class="player-pill ${left===0?'player-pill--green':''}">Осталось ${left} / 8</span></div><p>Каждый атрибут начинается с 1. Повышение 1→2 стоит 1 очко, 2→3 — 2, 3→4 — 3.</p><div class="b2-attr-grid">${BK.ATTRS.map(name=>{const v=attrs[name]||1;return `<div class="b2-attr"><span>${name}</span><div><button type="button" data-action="attr-down" data-attr="${esc(name)}" ${v<=1?'disabled':''}>−</button><strong>${v}</strong><button type="button" data-action="attr-up" data-attr="${esc(name)}" ${v>=4||left<v?'disabled':''}>+</button></div></div>`}).join('')}</div>${[5,7,9].filter(l=>needsAttributeIncrease(c,l)).map(l=>`<label class="b2-field">Повышение атрибута на ${l}-м уровне<select class="player-select" data-boost-level="${l}"><option value="">Выберите атрибут</option>${BK.ATTRS.map(a=>`<option value="${a}" ${c.attrBoosts?.[l]===a?'selected':''} ${BK.calculateAttrs(c.attrBase,c.attrBoosts)[a]>=6&&c.attrBoosts?.[l]!==a?'disabled':''}>${a}</option>`).join('')}</select></label>`).join('')}</section>`}
+function renderGearV2(c){const cl=BK.C(c.classId);if(!cl)return `<section class="b2-skill-region"><h3>Снаряжение</h3><p>Сначала выберите класс.</p></section>`;
+ const kit=kitFor(c),st=editorStats(c),gear=st.gear;
+ const options=(cl.kits||[]).map(id=>BK.kit(id)).filter(Boolean);
+ return `<section class="b2-skill-region"><div class="b2-stage-head"><div><div class="player-kicker">СТАРТОВОЕ СНАРЯЖЕНИЕ</div><h3>Выберите комплект</h3></div><span class="player-pill">${gear.occupied}/${gear.capacity} слотов</span></div><div class="b2-kits">${options.map(x=>`<button type="button" class="b2-kit ${c.kitId===x.id?'is-selected':''}" data-action="choose-kit" data-id="${esc(x.id)}"><b>${esc(x.label)}</b><span>${esc(x.description)}</span>${c.kitId===x.id?'<small>ВЫБРАН</small>':''}</button>`).join('')}</div>${kit?`<div class="b2-gear-columns"><div><h4>Экипировано (${gear.hands}/2 рук)</h4>${(c.equipped||[]).map((id,i)=>`<div class="b2-gear-item"><span>${esc(BK.item(id)?.name||id)}</span><button type="button" data-action="unequip-item" data-index="${i}" title="Снять предмет">Снять</button></div>`).join('')||'<p>Ничего</p>'}</div><div><h4>Инвентарь</h4>${(c.inventory||[]).map((id,i)=>{const x=BK.item(id);return `<div class="b2-gear-item"><span>${esc(x?.name||id)}</span>${x?.slot!=='inventory'?`<button type="button" data-action="equip-item" data-index="${i}">Надеть</button>`:''}</div>`}).join('')}</div></div><p class="b2-hint">Предметы можно снимать и надевать в пределах выбранного комплекта. Для другого стартового оружия выберите альтернативный комплект; бесплатная покупка любых предметов не предусмотрена.</p>`:'<p>Выберите один из двух комплектов.</p>'}${gear.errors.length?`<p class="b2-error">${gear.errors.map(esc).join(' · ')}</p>`:''}</section>`}
+function renderPreviewV2(c){const r=getRace(c.raceId),cl=getClass(c.classId),st=editorStats(c),issues=BK.issues(c);let warn='';if(c.level>=7)warn='<p class="b2-warning">Уровни 7–10: Истинный класс и его навыки требуют подтверждения Мастера. Сохранение не делает персонажа полностью завершённым.</p>';
+ return `<div class="b2-review"><div class="player-card player-card--glow"><div class="player-portrait-layout">${artOrPlaceholder(c.artData,'player-portrait-large')}<div><div class="player-kicker">FINAL PREVIEW / THAOS</div><h2 class="player-character-title">${esc(c.name||'Без имени')}</h2><p>${esc(r?.name||'—')} · ${esc(cl?.name||'—')} · ${c.level} уровень</p><p>${esc(cl?.paths?.[c.pathIndex]||'Путь пока не открыт')}</p><p><b>Комплект:</b> ${esc(kitName(c.kitId))}</p><p><b>Базовые навыки:</b> ${esc((c.baseSkills||[]).join(', ')||'—')}</p><p><b>Навыки Пути:</b> ${esc((c.pathSkills||[]).join(', ')||'—')}</p>${BK.autoSkills(c.classId).length?`<p><b>Автоматически:</b> ${BK.autoSkills(c.classId).map(esc).join(', ')}</p>`:''}</div></div><div class="b2-attr-summary">${Object.entries(c.attributes||{}).map(([k,v])=>`<span>${esc(k)}: <b>${v}</b></span>`).join('')}</div></div><div class="player-card"><h2>Параметры персонажа</h2><div class="player-metrics">${metric('HP',st.healthMax)}${metric('Мана',st.manaMax)}${metric('Защита',st.defense)}${metric('Скорость',st.speed+' м')}${metric('Инициатива',st.initiative)}${metric('Урон оружия',st.weaponDamage||'—')}</div><p class="b2-hint">Числа рассчитаны по тестовому математическому ядру 1.2. Условные усиления навыков Путей не подставляются без описанной механики.</p>${issues.length?`<div class="b2-error"><b>Что нужно завершить:</b><ul>${issues.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:'<div class="b2-success">Основные поля заполнены и проверены.</div>'}${warn}</div></div>`;
+}
+function renderEditor(){
+ const c=state.draft,cl=getClass(c.classId),r=getRace(c.raceId),st=editorStats(c);
+ let body='';
+ if(state.step===0)body=`<div class="player-grid player-grid--equal"><div class="player-stack">${inp('name','Имя персонажа',c.name,'text','maxlength="40" placeholder="Имя героя"')}<div class="player-field"><label for="b2-bio">История / цель</label><textarea class="player-input b2-textarea" id="b2-bio" data-field="bio" maxlength="400" rows="6" placeholder="Кто ваш герой, что он ищет в Таосе?">${esc(c.bio||'')}</textarea></div><label class="b2-upload">Загрузить портрет (PNG / JPEG / WebP, до 8 МБ)<input type="file" accept="image/png,image/jpeg,image/webp" data-upload="character"></label><p class="b2-hint">Изображение уменьшается и хранится вместе с листом персонажа в Firestore; Firebase Storage не требуется.</p>${c.artData?btn('Убрать портрет','remove-art'):''}</div><div class="b2-hero-portrait">${artOrPlaceholder(c.artData,'player-portrait-large')}</div></div>`;
+ if(state.step===1)body=viewOrb(c.level);
+ if(state.step===2)body=raceCards(c);
+ if(state.step===3)body=classCards(c);
+ if(state.step===4)body=renderSkillStage(c,cl);
+ if(state.step===5)body=`<div class="b2-atts-equipment">${renderAttributesV2(c)}${renderGearV2(c)}</div><div class="b2-quick-stats">${metric('HP',st.healthMax)}${metric('Мана',st.manaMax)}${metric('Защита',st.defense)}${metric('Скорость',st.speed+' м')}</div>`;
+ if(state.step===6)body=renderPreviewV2(c);
+ return `<div class="player-row player-row--between player-row--wrap b2-intro"><span class="player-kicker">CHARACTER BUILDER V2 // ${state.selectedId?'РЕДАКТИРОВАНИЕ':'НОВЫЙ ГЕРОЙ'}</span>${btn('Отменить','cancel-editor')}</div>${editorNav()}<div class="b2-stage b2-enter-${state.step}">${body}</div><div class="b2-navigation">${btn('← Назад','prev-step','',state.step===0?'disabled':'')}<div class="b2-mini-stats">${st.healthMax} HP · ${st.manaMax} MP · ${st.defense} Защита · ${st.speed} м</div>${state.step===6?btn('Сохранить персонажа?','save-character','player-button--primary',BK.issues(c).length?'disabled title="Завершите обязательные поля"':''):btn('Продолжить →','next-step','player-button--primary')}</div>`;
+}
+
 function renderGroup(){const party=state.party,pending=state.settings.pendingPartyId;
  if(!party){if(pending)return card('Заявка отправлена',`<span class="player-pill player-pill--gold">${state.request?.status==='approved'?'Одобрена':state.request?.status==='rejected'?'Отклонена':'Ожидание ответа'}</span><p>Вы запросили вступление в группу <b>${esc(pending)}</b>. Лидер увидит заявку и сможет принять её. Статус обновляется автоматически.</p>${btn('Отменить заявку','cancel-join','player-button--danger')}`);
  return `<div class="player-grid"><article class="player-card player-card--glow"><span class="player-kicker">PARTY CREATOR</span><h2>Создать группу</h2><p>Станьте лидером, задайте название, описание и герб. Другие игроки смогут присоединиться по ID после вашего подтверждения.</p><div class="player-stack">${inp('groupName','Название группы',state.groupDraftName,'text','maxlength="50" placeholder="Серебряные волки"')}<div class="player-field"><label>Описание группы</label><textarea class="player-textarea" id="groupDescription" maxlength="500" placeholder="Кто вы и чем занимаетесь?">${esc(state.groupDraftDescription)}</textarea></div><label class="player-artdrop" for="groupArtInput"><span>◇</span><b>Загрузить эмблему группы</b><span class="player-image-hint">PNG / JPG / WebP; уменьшенный арт</span><input type="file" id="groupArtInput" accept="image/png,image/jpeg,image/webp" data-upload="group"></label>${state.groupArt?`<img class="player-avatar" src="${safeArt(state.groupArt)}" alt="Эмблема">`:''}${btn('Создать группу','create-party','player-button--primary')}</div></article>
@@ -83,7 +125,7 @@ function attachPartySubcollections(id){const F=state.client.firestoreSdk,db=stat
  if(isLeader())state.partyUnsubs.push(F.onSnapshot(F.collection(db,'parties',id,'requests'),snap=>{state.requests=snap.docs.map(x=>({uid:x.id,...x.data()}));if(view()==='group')render()},err=>report(err,'Заявки группы')));
 }
 async function syncRoster(alert=true){const {client,user,party}=state;if(!client||!user||!party||!party.memberIds?.includes(user.uid))return;const c=activeChar(),F=client.firestoreSdk;const roster={uid:user.uid,characterId:c?.id||'',characterName:c?.name||user.displayName||'Без персонажа',className:getClass(c?.classId)?.name||'',level:c?.level||1,health:c?.health||0,healthMax:c?.healthMax||0,mana:c?.mana??5,manaMax:c?.manaMax??5,status:'В строю',updatedAt:F.serverTimestamp()};await F.setDoc(F.doc(client.db,'parties',party.id,'roster',user.uid),roster);if(alert)toast('Статус группы обновлён')}
-async function boot(){if(!firebaseIsConfigured){$('playerRailStatus').textContent='Нужна настройка Firebase';notice('Firebase не настроен. Проверь js/firebase-config.js','warning');return}
+async function boot(){if(document.body.dataset.builderDemo==='true'){state.user={uid:'demo',displayName:'Демо без Firebase'};$('playerRailStatus').textContent='Локальный деморежим';$('playerIdentity').textContent='ДЕМО';$('playerAuthGate').hidden=true;main.hidden=false;state.editor=true;state.draft=freshDraft();state.step=0;render();return;}if(!firebaseIsConfigured){$('playerRailStatus').textContent='Нужна настройка Firebase';notice('Firebase не настроен. Проверь js/firebase-config.js','warning');return}
  try{state.client=await getFirebaseClient();const {auth,authSdk}=state.client;authSdk.onAuthStateChanged(auth,async user=>{resetUnsubs(state.unsubs);resetUnsubs(state.partyUnsubs);state.user=user;state.party=null;state.roster=[];state.characters=[];state.settings={activeCharacterId:null,partyId:null,pendingPartyId:null};if(!user){$('playerRailStatus').textContent='Нужен вход';$('playerIdentity').textContent='Гость';$('playerAuthGate').hidden=false;main.hidden=true;updateNav();return;}$('playerAuthGate').hidden=true;$('playerIdentity').textContent=user.displayName||user.email||'Игрок';$('playerRailStatus').textContent='Соединение с THAOS';subscribeUser();render()});}catch(e){$('playerRailStatus').textContent='Нет соединения';report(e,'Подключение Firebase')}}
 function subscribeUser(){const {client,user}=state,F=client.firestoreSdk,db=client.db;
  state.unsubs.push(F.onSnapshot(F.collection(db,'users',user.uid,'characters'),snap=>{state.characters=snap.docs.map(d=>charFromDoc(d.id,d.data())).sort((a,b)=>{const at=a.createdAt?.seconds||0,bt=b.createdAt?.seconds||0;return bt-at});$('playerRailStatus').textContent='Синхронизация включена';render();},e=>report(e,'Загрузка персонажей')));
@@ -91,13 +133,129 @@ function subscribeUser(){const {client,user}=state,F=client.firestoreSdk,db=clie
  state.unsubs.push(F.onSnapshot(F.doc(db,'users',user.uid,'settings','notifications'),snap=>{state.newsletter=Boolean(snap.exists()&&snap.data().emailOptIn);if(view()==='dashboard')render()},e=>report(e,'Настройки обновлений')));
  const announcements=F.query(F.collection(db,'announcements'),F.where('published','==',true),F.limit(10));state.unsubs.push(F.onSnapshot(announcements,snap=>{state.announcements=snap.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(b.publishedAt?.seconds||0)-(a.publishedAt?.seconds||0));if(view()==='dashboard')render()},e=>{console.warn('Announcements unavailable:',e.code)}));
 }
-function freshDraft(existing=null){const c=existing?charFromDoc(existing.id,existing):defaults();return JSON.parse(JSON.stringify({...c,createdAt:undefined,updatedAt:undefined}));}
-function beginEditor(character=null,step=0){state.editor=true;state.draft=freshDraft(character);state.step=step;state.skillFocus=null;state.selectedId=character?.id||null;location.hash='#characters';render();window.scrollTo({top:0,behavior:'smooth'})}
-function chooseSkill(type,index){const c=state.draft,cl=getClass(c.classId);if(!cl)return;const arr=type==='base'?c.baseSkills:c.pathSkills;const options=type==='base'?cl.skills:pathInfo(cl,c.pathIndex)?.skills||[];const limit=type==='base'?skillsAt(c.level):pathAt(c.level),name=options[index];if(!name)return;state.skillFocus={type,name,desc:type==='base'?'Этот базовый навык описан в досье соответствующего класса.':pathInfo(cl,c.pathIndex)?.summary};if(arr.includes(name))arr.splice(arr.indexOf(name),1);else if(arr.length<limit)arr.push(name);render()}
-function selectPath(index){const c=state.draft,cl=getClass(c.classId);if(!cl||c.level<4||c.baseSkills.length!==skillsAt(c.level)||(index===4&&c.pathIndex!==4))return;if(c.pathIndex!==index)c.pathSkills=[];c.pathIndex=index;state.skillFocus=null;render()}
-function changeLevel(level){const c=state.draft;c.level=Math.max(1,Math.min(10,Number(level)||1));c.baseSkills=c.baseSkills.slice(0,skillsAt(c.level));if(c.level<4){c.pathIndex=-1;c.pathSkills=[]}else c.pathSkills=c.pathSkills.slice(0,pathAt(c.level));render()}
-function validateDraft(){const c=state.draft;if(!c.name.trim()||c.name.trim().length>40)return 'Введите имя персонажа (до 40 символов).';if(!getRace(c.raceId))return 'Выберите расу.';if(!getClass(c.classId))return 'Выберите класс.';if(c.baseSkills.length!==skillsAt(c.level))return `Выберите ${skillsAt(c.level)} базовых навыка (сейчас ${c.baseSkills.length}).`;if(c.level>=4&&(c.pathIndex<0||c.pathSkills.length!==pathAt(c.level)))return 'Выберите Путь и положенное количество навыков Пути.';if(attrUsed(c.attributes)!==8)return 'Распределите ровно 8 очков атрибутов.';if(c.health>c.healthMax||c.mana>c.manaMax)return 'Текущее здоровье и мана не могут превышать максимальные значения.';if(safeArt(c.artData)!==c.artData)return 'Арт превышает допустимый размер. Загрузите уменьшенное изображение.';return ''}
-async function saveCharacter(){const err=validateDraft();if(err){notice(err,'warning');return}const F=state.client.firestoreSdk,db=state.client.db,uid=state.user.uid,id=state.selectedId||F.doc(F.collection(db,'users',uid,'characters')).id;const c=state.draft;const data={schemaVersion:1,ownerId:uid,name:c.name.trim(),bio:c.bio.trim().slice(0,400),raceId:c.raceId,classId:c.classId,level:c.level,attributes:{...c.attributes},baseSkills:[...c.baseSkills],pathIndex:c.pathIndex,pathSkills:[...c.pathSkills],health:Math.max(0,Number(c.health)||0),healthMax:Math.max(0,Number(c.healthMax)||0),mana:Math.max(0,Number(c.mana)||0),manaMax:Math.max(0,Number(c.manaMax)||0),speed:Math.max(0,Number(c.speed)||0),defense:Math.max(0,Number(c.defense)||0),artData:c.artData||'',inventory:c.inventory||[],equipped:c.equipped||[],updatedAt:F.serverTimestamp()};toggleBusy(true);try{const ref=F.doc(db,'users',uid,'characters',id);if(!state.selectedId)data.createdAt=F.serverTimestamp();await F.setDoc(ref,data,{merge:true});if(!state.settings.activeCharacterId)await F.setDoc(F.doc(db,'users',uid,'settings','playerState'),{activeCharacterId:id},{merge:true});state.editor=false;state.draft=null;state.selectedId=id;toast('Персонаж сохранён в Firebase');render();if(state.party)await syncRoster(false)}catch(e){report(e,'Сохранение персонажа')}finally{toggleBusy(false)}}
+function freshDraft(existing=null){
+  const c=existing?charFromDoc(existing.id,existing):defaults();
+  const granted=BR?.getFreeSkill(c.classId);
+  if(granted)c.baseSkills=(c.baseSkills||[]).filter(n=>n!==granted);
+  const history=existing?.progression?.levelHistory||[];
+  c.attrBoosts=Object.fromEntries(history.filter(x=>x.type==='attribute'&&[5,7,9].includes(x.level)).map(x=>[String(x.level),x.attribute]));
+  const attrs={...defaults().attributes,...(existing?.attributes||{})};
+  for(const a of Object.values(c.attrBoosts))if(BK.ATTRS.includes(a))attrs[a]=Math.max(1,(attrs[a]||1)-1);
+  c.attrBase=BK.initBaseAttrs(attrs);
+  c.attributes=BK.calculateAttrs(c.attrBase,c.attrBoosts);
+  c.kitId=history.find(x=>x.type==='starterKit')?.kitId||'';
+  c.raceChoice=history.find(x=>x.type==='raceChoice')?.choice||'Огонь';
+  if(existing&&!c.kitId){
+    const options=BK.C(c.classId)?.kits||[];
+    c.kitId=options.find(id=>{
+      const x=BK.kit(id);return JSON.stringify(x?.equipped||[])===JSON.stringify(c.equipped||[])&&JSON.stringify(x?.inventory||[])===JSON.stringify(c.inventory||[]);
+    })||'';
+  }
+  c._preapprovedHidden=!!(existing&&existing.pathIndex===4);
+  c._legacyItems=!!(existing && (!c.kitId || (c.equipped||[]).some(x=>typeof x!=='string') || (c.inventory||[]).some(x=>typeof x!=='string')));
+  c._isNew=!existing;
+  c.createdAt=undefined;c.updatedAt=undefined;
+  return c;
+}
+function beginEditor(character=null,step=0){
+  state.editor=true;state.draft=freshDraft(character);state.step=step;state.skillFocus=null;
+  state.selectedId=character?.id||null;location.hash='#characters';render();window.scrollTo({top:0,behavior:'smooth'});
+  if(state.draft._legacyItems)notice('Старое снаряжение сохранено. Выбор комплекта V2 заменит его; перед переходом можно скачать прежний JSON-лист.','warning');
+}
+function previewSkill(type,index){
+  const c=state.draft,cl=getClass(c.classId);if(!cl)return;
+  const options=type==='base'?choiceSkills(cl):(pathInfo(cl,c.pathIndex)?.skills||[]);
+  const name=options[index];if(!name)return;state.skillFocus={type,name};render();
+}
+function chooseSkill(type,index){
+  const c=state.draft,cl=getClass(c.classId);if(!cl)return;
+  const arr=type==='base'?c.baseSkills:c.pathSkills;
+  const options=type==='base'?choiceSkills(cl):pathInfo(cl,c.pathIndex)?.skills||[];
+  const limit=type==='base'?skillsAt(c.level):pathAt(c.level),name=options[index];if(!name)return;
+  state.skillFocus={type,name};
+  if(arr.includes(name))arr.splice(arr.indexOf(name),1);
+  else if(arr.length<limit)arr.push(name);
+  render();
+}
+function selectPath(index){
+  const c=state.draft,cl=getClass(c.classId);
+  if(!cl||c.level<4||index<0||index>=cl.paths.length||(index===4&&c.pathIndex!==4))return;
+  if(c.pathIndex!==index)c.pathSkills=[];c.pathIndex=index;state.skillFocus=null;render();
+}
+function changeLevel(value){
+  const c=state.draft;
+  c.level=Math.max(1,Math.min(10,Math.trunc(Number(value)||1)));
+  c.baseSkills=c.baseSkills.slice(0,skillsAt(c.level));
+  if(c.level<4){c.pathIndex=-1;c.pathSkills=[]}
+  else c.pathSkills=c.pathSkills.slice(0,pathAt(c.level));
+  for(const l of [5,7,9])if(c.level<l)delete c.attrBoosts[String(l)];
+  syncAttrs(c);state.skillFocus=null;render();
+}
+function goEditorStep(next){
+  const step=Math.max(0,Math.min(6,next));
+  if(state.step===2&&step===3){
+    const stage=main.querySelector('.b2-stage');
+    if(stage){stage.classList.add('b2-leaving-race');setTimeout(()=>{state.step=step;render();},190);return;}
+  }
+  state.step=step;render();
+}
+function validateDraft(){
+  const c=state.draft;
+  const issues=BK.issues(c);
+  if(issues.length)return issues[0];
+  if(safeArt(c.artData)!==c.artData)return 'Арт слишком большой или имеет неподдерживаемый формат.';
+  return '';
+}
+function equipmentSlots(c){
+  const slots={mainHand:'',offHand:'',armor:'',accessory1:'',accessory2:'',special:''};
+  for(const id of c.equipped||[]){
+    const item=BK.item(id);if(!item)continue;
+    if(item.slot==='body')slots.armor=id;
+    else if(item.slot==='hands'){
+      if(item.hands===2){slots.mainHand=id;slots.offHand=id;}
+      else if(item.hands===1){if(!slots.mainHand)slots.mainHand=id;else slots.offHand=id;}
+    }else if(!slots.accessory1)slots.accessory1=id;
+    else if(!slots.accessory2)slots.accessory2=id;
+    else slots.special=id;
+  }
+  return slots;
+}
+async function saveCharacter(){
+  const err=validateDraft();if(err){notice(err,'warning');return}
+  const c=state.draft;syncAttrs(c);
+  const st=editorStats(c),maxHP=st.healthMax,maxMP=st.manaMax;
+  const initial=c._isNew;
+  const hp=initial?maxHP:Math.min(Math.max(0,Number(c.health)||0),maxHP);
+  const mp=initial?maxMP:Math.min(Math.max(0,Number(c.mana)||0),maxMP);
+  const history=[{type:'starterKit',kitId:c.kitId},...Object.entries(c.attrBoosts||{}).filter(([level])=>c.level>=Number(level)).map(([level,attribute])=>({type:'attribute',level:Number(level),attribute}))];
+  if(c.raceId==='dragonborn')history.push({type:'raceChoice',choice:c.raceChoice||'Огонь'});
+  const progression={pathId:c.pathIndex>=0?`${c.classId}-${c.pathIndex}`:'',breakthroughCompleted:!!(c.progression?.breakthroughCompleted&&c.progression?.trueClassId),trueClassId:c.progression?.trueClassId||'',trueClassSkills:Array.isArray(c.progression?.trueClassSkills)?c.progression.trueClassSkills:[],levelHistory:history};
+  if(c.level<7){progression.breakthroughCompleted=false;progression.trueClassId='';progression.trueClassSkills=[];}
+  const payload={schemaVersion:2,rulesetVersion:'core-math-1.2',name:c.name.trim(),bio:(c.bio||'').trim().slice(0,400),raceId:c.raceId,classId:c.classId,level:c.level,
+    attributes:{...c.attributes},baseSkills:[...c.baseSkills],pathIndex:c.pathIndex,pathSkills:[...c.pathSkills],
+    health:hp,healthMax:maxHP,mana:mp,manaMax:maxMP,speed:st.speed,defense:st.defense,artData:c.artData||'',
+    inventory:[...c.inventory],equipped:[...c.equipped],
+    appearance:{goal:(c.bio||'').slice(0,400),notes:'',portraitAssetPath:''},progression,
+    derivedStats:{mode:'partial',formulaVersion:'core-math-1.2',carryWeight:0,carryCapacity:st.gear.capacity,initiative:st.initiative},
+    wallet:{coins:Math.max(0,Math.trunc(Number(c.wallet?.coins)||0)),other:c.wallet?.other||{}},equipmentSlots:equipmentSlots(c)
+  };
+  if(document.body.dataset.builderDemo==='true'){
+    const id=state.selectedId||'DEMO-'+Date.now();const doc={...payload,id,ownerId:'demo'};
+    state.characters=[doc,...state.characters.filter(x=>x.id!==id)];state.draft=null;state.editor=false;state.selectedId=id;
+    downloadFile(`THAOS-${id}.json`,JSON.stringify(doc,null,2),'application/json;charset=utf-8');render();toast('Демо-персонаж сохранён в JSON. В Firebase ничего не отправлено.');return;
+  }
+  if(!state.client||!state.user){notice('Войдите в THAOS, чтобы сохранить персонажа.','warning');return}
+  const F=state.client.firestoreSdk,db=state.client.db,uid=state.user.uid;
+  const id=state.selectedId||F.doc(F.collection(db,'users',uid,'characters')).id;
+  payload.ownerId=uid;payload.updatedAt=F.serverTimestamp();if(!state.selectedId)payload.createdAt=F.serverTimestamp();
+  toggleBusy(true);
+  try{
+    await F.setDoc(F.doc(db,'users',uid,'characters',id),payload,{merge:true});
+    if(!state.settings.activeCharacterId)await F.setDoc(F.doc(db,'users',uid,'settings','playerState'),{activeCharacterId:id},{merge:true});
+    state.editor=false;state.draft=null;state.selectedId=id;render();toast('Персонаж V2 сохранён в Firestore');
+    if(state.party)await syncRoster(false);
+  }catch(e){report(e,'Сохранение персонажа V2')}finally{toggleBusy(false)}
+}
 function clickAction(e){const hit=e.target.closest('[data-action]');if(!hit||hit.disabled)return;const action=hit.dataset.action;const id=hit.dataset.id;const F=state.client?.firestoreSdk;const db=state.client?.db;const uid=state.user?.uid;if(!uid)return;
  switch(action){
  case 'new-character':if(state.characters.length>=8){notice('В этой версии доступно 8 персонажей.','warning');return}beginEditor();break;
@@ -106,13 +264,44 @@ function clickAction(e){const hit=e.target.closest('[data-action]');if(!hit||hit
  case 'edit-character':beginEditor(state.characters.find(x=>x.id===id));break;
  case 'level-up':beginEditor(state.characters.find(x=>x.id===id),1);toast('Повысьте уровень и выберите новые навыки');break;
  case 'cancel-editor':state.editor=false;state.draft=null;render();break;
- case 'edit-step':state.step=Number(hit.dataset.step);render();break;
- case 'prev-step':state.step=Math.max(0,state.step-1);render();break;
- case 'next-step':if(state.step===0&&!state.draft.name.trim()){notice('Сначала укажите имя персонажа.','warning');return}state.step=Math.min(4,state.step+1);render();break;
+ case 'edit-step':goEditorStep(Number(hit.dataset.step));break;
+ case 'prev-step':goEditorStep(state.step-1);break;
+ case 'next-step':if(state.step===0&&!state.draft.name.trim()){notice('Сначала укажите имя персонажа.','warning');return}goEditorStep(state.step+1);break;
+ case 'preview-base':previewSkill('base',Number(hit.dataset.skill));break;
+ case 'preview-path':previewSkill('path',Number(hit.dataset.skill));break;
  case 'toggle-base':chooseSkill('base',Number(hit.dataset.skill));break;
  case 'toggle-path':chooseSkill('path',Number(hit.dataset.skill));break;
  case 'choose-path':selectPath(Number(hit.dataset.path));break;
- case 'attr-up':case 'attr-down':{const key=hit.dataset.attr,a=state.draft.attributes,delta=action==='attr-up'?1:-1,next=a[key]+delta;if(next<1||next>4)return;if(delta>0&&attrUsed(a)+a[key]>8)return;a[key]=next;render();break}
+ case 'attr-up':case 'attr-down':{const key=hit.dataset.attr,a=state.draft.attrBase,delta=action==='attr-up'?1:-1,next=a[key]+delta;if(next<1||next>4)return;if(delta>0&&BK.pointCost(a)+a[key]>8)return;a[key]=next;syncAttrs(state.draft);render();break}
+
+ case 'level-minus':changeLevel(state.draft.level-1);break;
+ case 'level-plus':changeLevel(state.draft.level+1);break;
+ case 'level-direct':changeLevel(Number(hit.dataset.level));break;
+ case 'level-orbit':changeLevel(hit.dataset.orbit==='earth'?Math.min(5,state.draft.level):Math.max(6,state.draft.level));break;
+ case 'pick-race':{
+   if(!getRace(id))return;
+   state.draft.raceId=id;state.draft.raceChoice='Огонь';render();break;
+ }
+ case 'pick-class':{
+   const cl=getClass(id);if(!cl)return;
+   if(state.draft.classId!==id){state.draft.classId=id;state.draft.baseSkills=[];state.draft.pathIndex=-1;state.draft.pathSkills=[];state.draft.kitId=BK.starterKit(id);const kit=BK.makeGear(state.draft.kitId);state.draft.equipped=kit.equipped;state.draft.inventory=kit.inventory;state.skillFocus=null;}
+   render();break;
+ }
+ case 'choose-kit':{
+   const chosen=BK.kit(id);if(!chosen||chosen.classId!==state.draft.classId)return;
+   if(state.draft._legacyItems&&!confirm('Комплект заменит прежнее снаряжение персонажа. Сначала сохраните JSON-копию старого листа. Продолжить?'))return;
+   state.draft.kitId=id;const gear=BK.makeGear(id);state.draft.equipped=gear.equipped;state.draft.inventory=gear.inventory;state.draft._legacyItems=false;render();break;
+ }
+ case 'unequip-item':{
+   const c=state.draft,i=Number(hit.dataset.index);if(!Number.isInteger(i)||i<0||i>=c.equipped.length)return;
+   const value=c.equipped.splice(i,1)[0];c.inventory.push(value);render();break;
+ }
+ case 'equip-item':{
+   const c=state.draft,i=Number(hit.dataset.index);if(!Number.isInteger(i)||i<0||i>=c.inventory.length)return;
+   const value=c.inventory.splice(i,1)[0];c.equipped.push(value);
+   if(BK.checkGear(c.equipped,c.inventory).errors.length){c.equipped.pop();c.inventory.splice(i,0,value);notice('Нельзя надеть предмет: заняты руки, слот или превышен лимит.','warning');}
+   render();break;
+ }
  case 'remove-art':state.draft.artData='';render();break;
  case 'save-character':saveCharacter();break;
  case 'activate-character':F.setDoc(F.doc(db,'users',uid,'settings','playerState'),{activeCharacterId:id},{merge:true}).then(()=>{toast('Активный персонаж изменён');if(state.party)syncRoster().catch(()=>{})}).catch(e=>report(e,'Выбор персонажа'));break;
@@ -148,7 +337,9 @@ function sheetHtml(c){const cl=getClass(c.classId),r=getRace(c.raceId),style=`bo
 function exportCharacter(c,action){if(action==='download-json'){const copy={...c};delete copy.createdAt;delete copy.updatedAt;downloadFile(`THAOS-${c.id}.json`,JSON.stringify(copy,null,2),'application/json;charset=utf-8');toast('JSON сохранён');return}if(action==='download-html'){downloadFile(`THAOS-${c.name.replace(/[^\p{L}\p{N}_-]+/gu,'_').slice(0,32)}.html`,sheetHtml(c),'text/html;charset=utf-8');toast('Красивый HTML-лист скачан');return}const print=$('playerPrintSheet');const template=new DOMParser().parseFromString(sheetHtml(c),'text/html');print.innerHTML=template.body.innerHTML;print.querySelector('main')?.classList.add('print-page');print.style.display='block';const h=print.querySelector('h1');if(h)h.classList.add('print-name');const el=print.querySelector('.hero');if(el)el.classList.add('print-lead');print.querySelector('.stats')?.classList.add('print-metrics');window.print();setTimeout(()=>{print.style.display='';print.innerHTML=''},1500)}
 async function compressImage(file,preset='character'){if(!file.type.startsWith('image/')||file.type==='image/svg+xml')throw Error('Выберите PNG, JPEG или WebP. SVG не поддерживается.');if(file.size>8*1024*1024)throw Error('Файл больше 8 МБ.');const maxSize=preset==='character'?[620,820]:[380,380],target=preset==='character'?115000:85000;const bitmap=await createImageBitmap(file);const scale=Math.min(1,maxSize[0]/bitmap.width,maxSize[1]/bitmap.height);const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close?.();let data='';for(const q of [.78,.65,.52,.39]){data=canvas.toDataURL('image/webp',q);if(data.length<target)break}if(data.length>=target)throw Error('Изображение не удалось достаточно уменьшить. Попробуйте другое.');return data}
 main.addEventListener('click',clickAction);
-main.addEventListener('change',e=>{const el=e.target;if(el.dataset.field&&state.draft){const field=el.dataset.field,value=el.value;if(field==='level'){changeLevel(value);return}if(field==='classId'&&state.draft.classId!==value){state.draft.classId=value;state.draft.baseSkills=[];state.draft.pathIndex=-1;state.draft.pathSkills=[];render();return}if(field==='raceId'){state.draft.raceId=value;render();return}if(['health','healthMax','mana','manaMax','speed','defense'].includes(field))state.draft[field]=Math.max(0,Number(value)||0);else if(field in state.draft)state.draft[field]=value;}
+main.addEventListener('change',e=>{const el=e.target;if(el.dataset.field&&state.draft){const field=el.dataset.field,value=el.value;if(field==='level'){changeLevel(value);return}
+if(field==='raceChoice'){state.draft.raceChoice=value;return}if(field==='classId'&&state.draft.classId!==value){state.draft.classId=value;state.draft.baseSkills=[];state.skillFocus=null;state.draft.pathIndex=-1;state.draft.pathSkills=[];render();return}if(field==='raceId'){state.draft.raceId=value;render();return}if(['health','healthMax','mana','manaMax','speed','defense'].includes(field))state.draft[field]=Math.max(0,Number(value)||0);else if(field in state.draft)state.draft[field]=value;}
+ if(el.dataset.boostLevel&&state.draft){state.draft.attrBoosts[String(el.dataset.boostLevel)]=el.value;syncAttrs(state.draft);render();return;}
  if(el.dataset.upload){const file=el.files?.[0];if(!file)return;compressImage(file,el.dataset.upload).then(data=>{if(el.dataset.upload==='character'&&state.draft){state.draft.artData=data;render();toast('Арт оптимизирован и добавлен')}else if(el.dataset.upload==='group'){state.groupArt=data;render();toast('Эмблема готова')}}).catch(err=>notice(err.message,'error'));}
 });
 main.addEventListener('input',e=>{const el=e.target;
@@ -159,5 +350,6 @@ main.addEventListener('input',e=>{const el=e.target;
  if(!state.draft||!el.dataset.field)return;
  const field=el.dataset.field;if(field==='name'||field==='bio')state.draft[field]=el.value;
 });
+main.addEventListener('wheel',e=>{if(!state.draft||state.step!==1||!e.target.closest('.b2-orbits'))return;e.preventDefault();changeLevel(state.draft.level+(e.deltaY>0?1:-1));},{passive:false});
 window.addEventListener('hashchange',()=>{state.mapSelected=null;window.scrollTo({top:0,behavior:'smooth'});render()});
 boot();

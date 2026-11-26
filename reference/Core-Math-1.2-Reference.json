@@ -1,0 +1,1315 @@
+{
+  "version": "THAOS CORE MATH 1.2",
+  "status": "balance-candidate-for-character-builder",
+  "authorApproved": [
+    "2d20_sum",
+    "ability_progression_1_10",
+    "individual_skill_limits",
+    "defense_bonus_per_type_max",
+    "summons_limited_autonomy",
+    "no_second_attack_from_second_order",
+    "auto_summon_and_device_at_level_1"
+  ],
+  "newCandidate": [
+    "numeric_HP_mana_defense_speed",
+    "damage_growth",
+    "resonance_effect",
+    "spell_base_numbers",
+    "resource_caps",
+    "status_effect_numbers",
+    "death_saves",
+    "item_limits"
+  ],
+  "stats": {
+    "levelMin": 1,
+    "levelMax": 10,
+    "hp": "18+3*(L-1)+sum(eligible_distinct_hp_bonuses)",
+    "mana": "class.manaStart+class.manaPerLevel*(L-1)+sum(eligible_distinct_mana_bonuses)",
+    "defense": "22+floor((L-1)/3)+sum(max_positive_bonus_per_defenseType)",
+    "defenseTypes": [
+      "armor",
+      "shield",
+      "innate",
+      "active",
+      "ward",
+      "cover"
+    ],
+    "speed": "clamp(5+race.speedModifier+other_speed_modifiers,3,8)",
+    "initiative": "effective_speed+agility_at_battle_start"
+  },
+  "attributes": {
+    "names": [
+      "Сила",
+      "Ловкость",
+      "Телосложение",
+      "Интеллект",
+      "Мудрость",
+      "Харизма"
+    ],
+    "base": 1,
+    "startBudget": 8,
+    "startMax": 4,
+    "incrementalCostAtNextLevel": "new_value-1",
+    "increaseAtLevels": [
+      5,
+      7,
+      9
+    ],
+    "laterMax": 6
+  },
+  "roll": {
+    "dice": "2d20 sum",
+    "success": "roll1+roll2+attribute+mods>=DC",
+    "advantage": 3,
+    "hindrance": -3,
+    "resonanceTwoDice17to20": 0.04,
+    "specialEqual17to20": 0.01,
+    "anyDouble": 0.05,
+    "attackCrit": "ceil(1.5*baseAttackDamage) on success",
+    "specialCrit": "2*baseAttackDamage on success; replaces normal crit",
+    "naturalAutoSuccess": false,
+    "naturalAutoFailure": false,
+    "criticalHealingWithoutRoll": false
+  },
+  "combat": {
+    "weaponTiers": {
+      "unarmed_light": 4,
+      "onehanded": 5,
+      "ranged": 6,
+      "twohanded": 7,
+      "reload": 8
+    },
+    "weaponGrowth": "2*floor((L-1)/3)",
+    "spellCircles": {
+      "thresholds": [
+        1,
+        3,
+        5,
+        7,
+        9
+      ],
+      "manaCost": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "elevationMultiplier": 2,
+      "singleDamage": [
+        6,
+        8,
+        10,
+        12,
+        14
+      ],
+      "singleHeal": [
+        4,
+        6,
+        8,
+        10,
+        12
+      ]
+    },
+    "actions": {
+      "main": 1,
+      "minor": 1,
+      "movement": 1,
+      "reactionPerRound": 1,
+      "mainToMinor": 2,
+      "movementToMinor": 1
+    },
+    "saveDC": "20+floor((casterLevel-1)/3)+casterRelevantAttribute",
+    "mitigationOrder": [
+      "check_hit",
+      "calc_dmg_and_crit",
+      "apply_reduction_resistance_or_immunity",
+      "apply_temp_hp",
+      "apply_real_hp",
+      "check_zero_hp_and_recovery_trait"
+    ],
+    "defaultActions": {
+      "attack": "Основное: одна атака, нужная рука и дальность",
+      "cast": "Основное: одно заклинание, если не переопределено карточкой",
+      "dash": "Основное: дополнительное перемещение на текущую Скорость за этот ход",
+      "standUp": "Движение: 2 м доступной Скорости",
+      "drawOrStow": "одно простое взаимодействие без действия за ход; последующие — Малое",
+      "reload": "если в оружии указана перезарядка, Малое; устройства имеют свои правила",
+      "attackOfOpportunity": "не существует по умолчанию; только от указанного навыка/реакции"
+    },
+    "movement": {
+      "grid": "1 клетка=1м; смежная диагональная клетка стоит 1м; нельзя пройти через закрытый угол",
+      "difficultTerrain": "каждая клетка трудной местности стоит 2м Скорости вместо 1м",
+      "minimumMovement": "0 при Обездвиживании или явно запрещающем состоянии; обычный cap 3..8",
+      "speedIncreasesExtraAttacks": false
+    },
+    "resistance": {
+      "resistanceN": "уменьшает соответствующую часть входящего урона на N после всех усилений, до временных HP; минимум 0",
+      "sameDamageTypeResistance": "сильнейшая; не складываются",
+      "mixedDamage": "считать урон по типам, затем суммировать",
+      "immunity": "сводит соответствующий тип к 0",
+      "vulnerability": "каждый стак +1 к следующему успешному полученному урону, затем все стеки расходуются"
+    },
+    "zeroHP": {
+      "atZero": "теряет сознание и действия",
+      "save": "в начале каждого хода 2d20+Телосложение >=20",
+      "successfulSavesToStabilize": 3,
+      "failedSavesToDie": 3,
+      "damageWhileDown": "добавляет один провал (критический удар — два)",
+      "healing": "при HP>0 встает, счетчик обнуляется, получает Усталость 1",
+      "halfOrcPreventDeath": "один раз за долгий отдых перед фактическим 0HP переходит на 1HP"
+    },
+    "summonProfile": {
+      "level": "L",
+      "hp": "8+2*L",
+      "defense": "22+floor((L-1)/3)",
+      "attackBonus": "2+floor((L-1)/3)",
+      "damage": "3+floor((L-1)/3)",
+      "speed": 4,
+      "activeSlots": "1 at 1-3; 2 at 4-7; 3 at 8-10",
+      "costToSummon": "2 MP and 1 Основное, occupies one Уз slot until end of scene or death",
+      "tacticalAutonomy": "defensive movement/stance; no offensive action",
+      "activeOrders": "1 through level6, 2 from level7; 1 attack max per round for all servants",
+      "oneAttackPerRoundForOwner": true
+    },
+    "deviceProfile": {
+      "level": "L",
+      "hp": "6+2*L",
+      "defense": "24+floor((L-1)/3)",
+      "attackBonus": "1+floor((L-1)/3)",
+      "damage": "4+floor((L-1)/3)",
+      "speed": 0,
+      "activeSlots": "1 at 1-3; 2 at 4-7; 3 at 8-10",
+      "costToDeploy": "2 MP, 1 Основное, transfer 1 reserve charge into newly deployed device",
+      "maxChargesPerDevice": 2,
+      "attackingActivation": "1 Малое +1 device charge; max 1 across all devices per round",
+      "baseReload": "Основное: transfer 1 charge from reserve to device",
+      "skillReload": "Малое: transfer 1 from reserve to device, 1/device/round",
+      "dismantle": "return at most min(1,unspent_device_charges) to reserve; cannot create charge",
+      "activeOrderAtLevel7": "second activation tactical only; does not increase attack count"
+    },
+    "summonAndDeviceNumbersApproval": "balance-candidate, not author-confirmed, preserve as playtest defaults"
+  },
+  "resources": {
+    "monkQiMax": "2+floor(L/2)",
+    "bardInspirationMax": "2+floor((L-1)/3)",
+    "rangerOpticMax": "2+floor((L-1)/3)",
+    "druidEssenceMax": "2+floor((L-1)/3)",
+    "summonSlotsByLevel": {
+      "1-3": 1,
+      "4-7": 2,
+      "8-10": 3
+    },
+    "summonCommandsAt7": 2,
+    "summonAttacksPerRound": 1,
+    "mechanistReserveMax": "4+2*floor((L-1)/3)",
+    "deviceCapacity": 2,
+    "deviceAttacksPerRound": 1,
+    "monkQi": {
+      "max": "2+floor(L/2)",
+      "shortRest": "ceil(max/2)",
+      "longRest": "full",
+      "startTurn": "нет автоматического восстановления без «Духовного просветления»"
+    },
+    "bardInspiration": {
+      "max": "2+floor((L-1)/3)",
+      "shortRest": "1",
+      "longRest": "full"
+    },
+    "rangerOpticPoints": {
+      "max": "2+floor((L-1)/3)",
+      "gain": "+1 после успешного наблюдения за целью за Малое, максимум 1/раунд",
+      "use": "потратить 1 при дальнем попадании: +1 к результату броска до объявления исхода, 1/раунд",
+      "longRest": "full"
+    },
+    "druidEssence": {
+      "max": "2+floor((L-1)/3)",
+      "use": "1 Суть => +1 к одному лечению или природному урону, 1/раунд",
+      "shortRest": "+1",
+      "longRest": "full"
+    },
+    "warlockSpirit": {
+      "max": "1+floor(floor((L-1)/3)/2)",
+      "gain": "1 от значимого побежденного существа, не чаще 1/сцену; не от собственного призыва",
+      "use": "1 => +1 урона заклинания или +1 к проверке порчи, максимум раз за раунд",
+      "longRest": "обнуляется"
+    },
+    "mechanistReserve": {
+      "max": "4+2*floor((L-1)/3)",
+      "shortRest": "восстановить 2 до предела",
+      "longRest": "full",
+      "transfer": "в устройство не создаёт зарядов"
+    },
+    "summonerBonds": {
+      "capacity": "1 (1–3), 2 (4–7), 3 (8–10)",
+      "rest": "освобождаются после исчезновения существ; сами не расходуются"
+    },
+    "archerStance": {
+      "kind": "mode",
+      "toggle": "1 Малое, не чаще 1/раунд",
+      "modeCount": 2,
+      "grantsExtraAction": false
+    }
+  },
+  "rests": {
+    "shortRestHP": "ceil(0.20*maxHP)",
+    "shortRestMana": "min(4,max(2,ceil(maxMP/8)))",
+    "maxShortRestsBetweenLong": 2,
+    "longRest": "full HP and mana, resets limited features and exhaustion unless specific rule"
+  },
+  "conditions": {
+    "mark": {
+      "max": 6,
+      "effect": "count only, no automatic damage",
+      "decay": "to end of scene unless skill specifies earlier",
+      "perSource": "each ability own per-target application limit"
+    },
+    "vulnerable": {
+      "max": 3,
+      "effect": "next successful incoming damage +1 per stack, then consume all",
+      "decay": "end of next victim turn if unused"
+    },
+    "exhaustion": {
+      "max": 5,
+      "tiers": {
+        "0": "none",
+        "1": "-1 к проверкам",
+        "2": "-1 к проверкам и -1м Скорости",
+        "3": "-2 к проверкам и -1м Скорости",
+        "4": "-2 к проверкам и -2м Скорости; нет Реакций",
+        "5": "-3 к проверкам и -2м Скорости; нет Реакций и обмена Основного на Малые"
+      },
+      "maxReached": "умение, обязанное добавить Усталость, использовать нельзя",
+      "shortRest": -1,
+      "longRest": "снять всё"
+    },
+    "slowed": {
+      "effect": "-2м Скорости, но не ниже 3м, если нет Обездвиживания",
+      "stack": "strongest only",
+      "defaultDuration": "1 раунд"
+    },
+    "rooted": {
+      "effect": "Скорость 0; другие действия сохраняются",
+      "stack": "refresh duration only"
+    },
+    "prone": {
+      "effect": "подъем стоит 2м Движения; ближние атаки по цели +2; дальние атаки по цели -2",
+      "stack": "no"
+    },
+    "blind": {
+      "effect": "-3 к собственным атакам; атаки по нему +3, если известна позиция",
+      "stack": "no"
+    },
+    "stun_soft": {
+      "effect": "теряет следующую Реакцию и одно Малое действие; Основное и Движение остаются",
+      "immunityAfter": "1 раунд от повторного Оглушения"
+    },
+    "fear": {
+      "effect": "-3 к проверкам против источника страха, нельзя добровольно приблизиться к источнику",
+      "duration": "specified by skill"
+    },
+    "poisoned": {
+      "effect": "-2 к проверкам, пока действует; повреждение ядом только если отдельно указано"
+    },
+    "bleeding": {
+      "effect": "1 физический HP-урон в конце хода на 2 раунда",
+      "stack": "от одного источника сильнейшая версия; разные источники максимум 3 за ход"
+    },
+    "curse": {
+      "effect": "-1 к проверкам за каждый стак, максимум 3",
+      "duration": "до очищения либо долгого отдыха если не указано иное"
+    }
+  },
+  "inventory": {
+    "baseSlots": 10,
+    "smallBag": 3,
+    "largeBag": 5,
+    "equippedNotInventory": true,
+    "maxHands": 2,
+    "maxAttuned": 3,
+    "bagBonusNonStacking": true,
+    "equippedSlots": [
+      "голова",
+      "тело",
+      "руки",
+      "ноги",
+      "ступни",
+      "шея",
+      "пояс",
+      "плащ",
+      "кольцо1",
+      "кольцо2",
+      "левая рука",
+      "правая рука"
+    ],
+    "hands": "двуручное оружие требует 2 рук; щит 1; нельзя превысить 2",
+    "bags": "только лучшая обычная сумка добавляет +3 или +5",
+    "stackGroup": "одинаковые предметные эффекты с одинаковым механическим stackGroup не складываются",
+    "attunement": "не более 3 активных магических привязок; особо мощная реликвия может занять 2",
+    "armor": {
+      "cloth": 0,
+      "light": 1,
+      "medium": 2,
+      "heavy": 3
+    },
+    "shieldBonus": 1,
+    "heavyArmorPenalty": {
+      "speed": -1,
+      "stealthCheck": -3
+    },
+    "itemsNoWeight": true,
+    "rangedWeapons": "боеприпасы расходуются по карточке; обычная перезарядка за Малое, если не предусмотрено иначе"
+  },
+  "progression": {
+    "1": "one base skill + automatic class mechanics",
+    "2": "second base skill",
+    "3": "third base skill",
+    "4": "path passive and one of 4 path skills",
+    "5": "attribute +1",
+    "6": "second path skill",
+    "7": "common path feature, True Class, attribute +1",
+    "8": "first True Class skill",
+    "9": "second True Class skill and attribute +1",
+    "10": "capstone"
+  },
+  "classes": {
+    "warrior": {
+      "name": "Воин",
+      "manaStart": 5,
+      "manaPerLevel": 1,
+      "kits": [
+        "warrior_guard",
+        "warrior_assault"
+      ],
+      "resourceName": "—"
+    },
+    "monk": {
+      "name": "Монах",
+      "manaStart": 5,
+      "manaPerLevel": 1,
+      "kits": [
+        "monk_balanced",
+        "monk_staff"
+      ],
+      "resourceName": "Ци"
+    },
+    "bard": {
+      "name": "Бард",
+      "manaStart": 7,
+      "manaPerLevel": 2,
+      "kits": [
+        "bard_duelist",
+        "bard_chanter"
+      ],
+      "resourceName": "Вдохновение"
+    },
+    "ranger": {
+      "name": "Рейнджер",
+      "manaStart": 5,
+      "manaPerLevel": 1,
+      "kits": [
+        "ranger_hunter",
+        "ranger_scout"
+      ],
+      "resourceName": "Оптические очки"
+    },
+    "archer": {
+      "name": "Лучник",
+      "manaStart": 5,
+      "manaPerLevel": 1,
+      "kits": [
+        "archer_marksman",
+        "archer_crossbow"
+      ],
+      "resourceName": "Стойка"
+    },
+    "mage": {
+      "name": "Маг",
+      "manaStart": 10,
+      "manaPerLevel": 3,
+      "kits": [
+        "mage_caster",
+        "mage_guard"
+      ],
+      "resourceName": "Мана"
+    },
+    "wizard": {
+      "name": "Волшебник",
+      "manaStart": 9,
+      "manaPerLevel": 3,
+      "kits": [
+        "wizard_scholar",
+        "wizard_field"
+      ],
+      "resourceName": "Фолиант / Мана"
+    },
+    "warlock": {
+      "name": "Колдун",
+      "manaStart": 8,
+      "manaPerLevel": 2,
+      "kits": [
+        "warlock_blood",
+        "warlock_blade"
+      ],
+      "resourceName": "Ушедший дух"
+    },
+    "priest": {
+      "name": "Жрец",
+      "manaStart": 8,
+      "manaPerLevel": 2,
+      "kits": [
+        "priest_guard",
+        "priest_mystic"
+      ],
+      "resourceName": "Мана / Молитва"
+    },
+    "druid": {
+      "name": "Друид",
+      "manaStart": 8,
+      "manaPerLevel": 2,
+      "kits": [
+        "druid_warden",
+        "druid_seer"
+      ],
+      "resourceName": "Суть"
+    },
+    "summoner": {
+      "name": "Призыватель",
+      "manaStart": 7,
+      "manaPerLevel": 2,
+      "kits": [
+        "summoner_bond",
+        "summoner_warden"
+      ],
+      "resourceName": "Узы"
+    },
+    "rogue": {
+      "name": "Плут",
+      "manaStart": 5,
+      "manaPerLevel": 1,
+      "kits": [
+        "rogue_knife",
+        "rogue_runner"
+      ],
+      "resourceName": "—"
+    },
+    "mechanist": {
+      "name": "Механист",
+      "manaStart": 5,
+      "manaPerLevel": 1,
+      "kits": [
+        "mechanist_tech",
+        "mechanist_bolt"
+      ],
+      "resourceName": "Заряды"
+    },
+    "soul_devourer": {
+      "name": "Пожиратель душ",
+      "status": "gm_draft_only",
+      "manaStart": 7,
+      "manaPerLevel": 2,
+      "kitStatus": "not_approved",
+      "resourceName": "Кровоизлияния"
+    }
+  },
+  "races": {
+    "human": {
+      "name": "Люди",
+      "speedModifier": 0,
+      "passiveDescription": "1 раз за долгий отдых после совершения проверки добавь +2 к её результату. Решение принимается после броска, но до объявления исхода.",
+      "status": "current"
+    },
+    "elf": {
+      "name": "Эльфы",
+      "speedModifier": 1,
+      "passiveDescription": "Получаешь +2 к проверкам обнаружения скрытых существ, следов и аномалий.",
+      "status": "current"
+    },
+    "dwarf": {
+      "name": "Дворфы",
+      "speedModifier": -1,
+      "passiveDescription": "Получаешь +2 к сопротивлению состоянию «Сбит с ног», толчкам и любому принудительному перемещению.",
+      "status": "current"
+    },
+    "dragonborn": {
+      "name": "Драконорождённые",
+      "speedModifier": 0,
+      "passiveDescription": "При создании персонажа выбери Огонь, Холод или Молнию. Получаешь Сопротивление 1 выбранному типу урона.",
+      "status": "current"
+    },
+    "tabaxi": {
+      "name": "Табакси",
+      "speedModifier": 1,
+      "passiveDescription": "Первый 1 м трудной местности в каждый свой ход не требует дополнительного Движения.",
+      "status": "current"
+    },
+    "half-orc": {
+      "name": "Полуорки",
+      "speedModifier": 0,
+      "passiveDescription": "1 раз за долгий отдых, когда твой HP должен снизиться до 0, вместо этого остаёшься с 1 HP.",
+      "status": "current"
+    },
+    "tortle": {
+      "name": "Тортлы",
+      "speedModifier": -1,
+      "passiveDescription": "Если в свой ход не использовал Рывок, получаешь +1 Защиты против первой атаки по тебе до начала следующего хода.",
+      "status": "current"
+    },
+    "goliath": {
+      "name": "Голиафы",
+      "speedModifier": 0,
+      "passiveDescription": "Тяжёлая нагрузка считается для тебя на одну ступень легче. Также получаешь +2 к проверкам против экстремального холода, высоты и истощения от переносимого веса.",
+      "status": "current"
+    },
+    "tiefling": {
+      "name": "Тифлинги",
+      "speedModifier": 0,
+      "passiveDescription": "Получаешь Сопротивление 1 Огню.",
+      "status": "current"
+    },
+    "grung": {
+      "name": "Грунги",
+      "speedModifier": 0,
+      "passiveDescription": "Можешь свободно дышать под водой и получаешь +2 к проверкам перемещения в воде и болотах.",
+      "status": "current"
+    },
+    "serpent": {
+      "name": "Серпанты",
+      "speedModifier": 0,
+      "passiveDescription": "Получаешь +2 к сопротивлению Яду и болезням.",
+      "status": "current"
+    },
+    "scorpionfolk": {
+      "name": "Скорпионолюди",
+      "speedModifier": 0,
+      "passiveDescription": "Первый раз за раунд, когда получаешь физический урон, уменьши полученный урон на 1.",
+      "status": "current"
+    },
+    "ashborn": {
+      "name": "Пепельник",
+      "status": "draft_no_passive",
+      "speedModifier": null,
+      "passiveDescription": null
+    }
+  },
+  "starterAbilities": {
+    "warrior": [
+      {
+        "name": "Укреплённая стойка",
+        "action": "Малое",
+        "limit": "1/раунд",
+        "mechanic": "+2 Защиты [active] и +2 против перемещения до начала своего следующего хода; повтор лишь обновляет срок.",
+        "sourceDescription": "Малое действие. До начала следующего хода получаете +2 Защиты и +2 к сопротивлению принудительному перемещению.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Усердная тренировка",
+        "action": "Пассив",
+        "limit": "1/бой",
+        "mechanic": "В начале боя временные HP = уровень + Телосложение, без повторного сложения при возвращении в ту же битву.",
+        "sourceDescription": "Пассив. В начале боя получаете временные HP, равные уровню + Выносливость.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Здоровое тело",
+        "action": "Пассив",
+        "limit": "постоянно",
+        "mechanic": "+2 + ступень уровня к максимуму HP; +1 к сопротивлению яду, болезни и физическому истощению.",
+        "sourceDescription": "Пассив. Увеличивает максимальный запас HP и даёт +1 к сопротивлению Яду, болезням и физическому истощению.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Точный удар",
+        "action": "Основное",
+        "limit": "1/раунд",
+        "mechanic": "Одна атака оружием с +2 к попаданию; второй атаки не даёт.",
+        "sourceDescription": "Основное действие. Совершите атаку с +2 к попаданию. Не чаще одного раза за раунд.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Быстрый манёвр",
+        "action": "Движение",
+        "limit": "1/раунд",
+        "mechanic": "Сдвиг на дополнительные 2 м; первое покидание зоны противника этим движением не вызывает реакции.",
+        "sourceDescription": "Движение. Переместитесь дополнительно на 2 м; первый противник, чью зону вы покидаете, не может использовать реакцию на это движение.",
+        "status": "new_candidate",
+        "autoAt1": false
+      }
+    ],
+    "monk": [
+      {
+        "name": "Духовное просветление",
+        "action": "Пассив",
+        "limit": "1/начало хода",
+        "mechanic": "Если Усталость равна 0, восстановить 1 Ци до максимума; дополнительные действия не повторяют триггер.",
+        "sourceDescription": "Пассив. В начале своего хода, если у вас нет Усталости, восстановите 1 Ци до максимума.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Оглушающий удар",
+        "action": "Основное",
+        "limit": "1/раунд",
+        "mechanic": "После попадания: 2 Ци, сопротивление цели 2d20+Телосложение против 24; при провале утрата следующего Малого действия и Реакции; иммунитет к повторному Оглушению 1 раунд после окончания.",
+        "sourceDescription": "Основное действие. После попадания можно потратить Ци и попытаться наложить Оглушение.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Отталкивающий удар",
+        "action": "Основное",
+        "limit": "1/раунд",
+        "mechanic": "Одна атака; после попадания перемещение цели на 2 м (Телосложение против 20+ступень+Сила уменьшает до 1 м); препятствие добавляет 2 урона.",
+        "sourceDescription": "Основное действие. После попадания переместите цель на 2 м; столкновение с препятствием может дать дополнительный эффект.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Магический удар",
+        "action": "Основное",
+        "limit": "без отдельного лимита",
+        "mechanic": "Одна рукопашная атака; за 1 Ману выбрать физический или магический тип урона. Без дополнительной атаки.",
+        "sourceDescription": "Основное действие. Атака считается магической и может наносить физический или магический тип урона.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Лёгкий шаг",
+        "action": "Пассив",
+        "limit": "постоянно",
+        "mechanic": "Первый 1 м сложной местности за ход бесплатен; навыки с движением получают +1 м в пределах допустимой Скорости.",
+        "sourceDescription": "Пассив. Первый 1 м сложной местности каждый ход не требует дополнительного движения; навыки с перемещением получают +1 м.",
+        "status": "new_candidate",
+        "autoAt1": false
+      }
+    ],
+    "bard": [
+      {
+        "name": "Летописец",
+        "action": "Пассив",
+        "limit": "1/сцену",
+        "mechanic": "После успешной проверки союзника запомнить Мотив; +1 к одной аналогичной проверке союзника в той же сцене.",
+        "sourceDescription": "Пассив. После успешного действия союзника запомните его как Мотив; один раз за сцену дайте +1 к похожей проверке.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Волшебные слова",
+        "action": "Малое",
+        "limit": "1/раунд",
+        "mechanic": "За 1 Вдохновение: союзнику в пределах 5 м +2 к следующей проверке ИЛИ врагу -2 к следующей проверке после провала сопротивления Мудрости против 20+ступень+Харизма; действует до начала следующего хода Барда.",
+        "sourceDescription": "Малое действие. Союзник получает небольшой бонус к следующей проверке, противник — штраф к следующей.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Осторожность",
+        "action": "Реакция",
+        "limit": "1/раунд",
+        "mechanic": "Союзнику в 2 м +2 Защиты [active] от одной объявленной атаки, без сложения с другими active.",
+        "sourceDescription": "Реакция. Когда союзник рядом становится целью атаки, дайте ему +2 Защиты против этой атаки.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Болтливый шарлатан",
+        "action": "Пассив",
+        "limit": "постоянно",
+        "mechanic": "+2 к обману, отвлечению и импровизированным социальным манёврам.",
+        "sourceDescription": "Пассив. Получаете +2 к проверкам обмана, отвлечения и импровизированных социальных манёвров.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Подхватить мотив",
+        "action": "Реакция",
+        "limit": "1/раунд",
+        "mechanic": "Когда союзник накладывает состояние, применить командную Связку: следующая успешная атака союзника по этой цели в том же раунде +2 урона; состояние не расходуется и на одной цели не более 1 Связки/раунд.",
+        "sourceDescription": "Реакция, 1/раунд. Когда союзник накладывает состояние на врага, можете активировать Связку, не расходуя состояние.",
+        "status": "new_candidate",
+        "autoAt1": false
+      }
+    ],
+    "ranger": [
+      {
+        "name": "Нет интереса",
+        "action": "Пассив",
+        "limit": "1/ход",
+        "mechanic": "Если цель не атаковала вас с начала предыдущего хода, первая ваша атака по ней получает +1 к попаданию.",
+        "sourceDescription": "Пассив. Если враг не атаковал вас с начала прошлого хода, первая атака по нему получает небольшой бонус.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Расширенная охота",
+        "action": "Пассив",
+        "limit": "1/сцену",
+        "mechanic": "При чтении следов получаете направление и оценку количества добычи, если следы доступны; +2 к соответствующей проверке Мудрости.",
+        "sourceDescription": "Пассив. По следам определяете направление, примерное количество и состояние добычи.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Повышенная аккуратность",
+        "action": "Малое",
+        "limit": "1/раунд",
+        "mechanic": "Следующая дальняя атака до конца текущего хода получает +2 к попаданию; повтор не суммируется.",
+        "sourceDescription": "Малое действие. Следующая дальняя атака до конца хода получает +2 к попаданию.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Красочные метки",
+        "action": "Малое",
+        "limit": "1/цель/раунд",
+        "mechanic": "Наложить Охотничью Метку (общая Метка +1, предел 6); в каждый момент не более одной вашей приоритетной добычи.",
+        "sourceDescription": "Малое действие. Наложите Охотничью Метку; навыки Рейнджера получают дополнительные эффекты против отмеченной цели.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Холодный расчёт",
+        "action": "Основное",
+        "limit": "1/раунд",
+        "mechanic": "Если не двигались в текущем ходу и цель помечена, одна атака получает +2 урона, не умножаемые количеством Меток.",
+        "sourceDescription": "Основное действие. Атака по отмеченной цели усиливается, если до неё вы не перемещались.",
+        "status": "new_candidate",
+        "autoAt1": false
+      }
+    ],
+    "archer": [
+      {
+        "name": "Твёрдая рука",
+        "action": "Пассив",
+        "limit": "1/ход",
+        "mechanic": "Если до атаки не перемещались, +1 к попаданию первой дистанционной атаки.",
+        "sourceDescription": "Пассив. Если до атаки вы не двигались, получите +1 к попаданию.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Навскидку",
+        "action": "Малое",
+        "limit": "1/раунд",
+        "mechanic": "Одна дополнительная дальняя атака, урон=max(1, floor(базовый урон оружия/2)); не переносит прирост уровня, критические усиления чужих навыков и эффект Основной атаки.",
+        "sourceDescription": "Малое действие, 1/раунд. Совершите быструю дальнюю атаку с уменьшенным уроном.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Сквозной выстрел",
+        "action": "Основное",
+        "limit": "1/раунд",
+        "mechanic": "Одна дистанционная атака по первой цели; при попадании вторая непосредственно за ней получает половину базового урона оружия, только если та же проверка преодолела её Защиту.",
+        "sourceDescription": "Основное действие. Выстрел проходит через первую цель и может задеть вторую непосредственно за ней.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Контроль дистанции",
+        "action": "Реакция",
+        "limit": "1/раунд",
+        "mechanic": "Когда враг приблизился к дистанции 2 м или меньше, переместиться на 2 м в свободные клетки; это не атака.",
+        "sourceDescription": "Реакция. Когда враг приближается, переместитесь на 2 м и сохраните наведение, если он остаётся в линии огня.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Тяжёлая тетива",
+        "action": "Основное",
+        "limit": "1/раунд",
+        "mechanic": "Если не перемещались в этот ход, одна дальняя атака получает +2 урона; Скорость становится 0 до конца текущего хода.",
+        "sourceDescription": "Основное действие. Если вы не двигались, совершите усиленный выстрел; после него Speed до конца хода становится 0.",
+        "status": "new_candidate",
+        "autoAt1": false
+      }
+    ],
+    "mage": [
+      {
+        "name": "Магический резерв",
+        "action": "Пассив",
+        "limit": "постоянно",
+        "mechanic": "Максимальная Мана +2+ступень уровня; повышение максимума само по себе Ману не восстанавливает.",
+        "sourceDescription": "Пассив. Увеличивает максимальный запас Маны.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Свободные заклинания",
+        "action": "Малое",
+        "limit": "1/раунд",
+        "mechanic": "До конца хода поменять тип урона следующего известного магического заклинания на доступный персонажу тип; не увеличивает урон.",
+        "sourceDescription": "Малое действие, 1/раунд. Измените тип урона следующего заклинания на доступный вам магический тип.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Испорченная мана",
+        "action": "Пассив",
+        "limit": "1/раунд",
+        "mechanic": "При сотворении заклинания нанести +2 урона одной цели, получив Усталость 1; при 5 Усталости нельзя.",
+        "sourceDescription": "Пассив. Можете усилить заклинание ценой Усталости 1.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Длинные заклинания",
+        "action": "Пассив",
+        "limit": "1/ход",
+        "mechanic": "Если до заклинания не перемещались, его указанная дистанция увеличивается на 3 м (не площадь).",
+        "sourceDescription": "Пассив. Если вы не двигались в этом ходу, заклинания с дистанцией получают увеличенную дальность.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Свободные грузы",
+        "action": "Пассив",
+        "limit": "1/ход",
+        "mechanic": "Взять/переместить без атаки простой объект в 1 слот в пределах 3 м; не может разоружать удерживающего его врага без отдельной проверки.",
+        "sourceDescription": "Пассив. Простые магические манипуляции предметами не требуют отдельного боевого заклинания.",
+        "status": "new_candidate",
+        "autoAt1": false
+      }
+    ],
+    "wizard": [
+      {
+        "name": "Грамотность",
+        "action": "Пассив",
+        "limit": "постоянно",
+        "mechanic": "+2 к проверкам чтения рун и распознавания формул.",
+        "sourceDescription": "Пассив. Быстрее расшифровываете руны, магические записи и неизвестные формулы.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Предосторожный",
+        "action": "Реакция",
+        "limit": "1/раунд",
+        "mechanic": "При первом магическом воздействии на вас в раунде +2 к одной проверке сопротивления.",
+        "sourceDescription": "Реакция. При обнаружении магического эффекта получаете бонус к сопротивлению его первому воздействию.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Магический фокус",
+        "action": "Малое",
+        "limit": "1/раунд",
+        "mechanic": "До конца текущего хода +2 к попаданию следующим заклинанием; повтор не суммируется.",
+        "sourceDescription": "Малое действие. Выберите заклинание: следующее его применение получает +2 к проверке.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Роскошный резерв",
+        "action": "Пассив",
+        "limit": "выбор после долгого отдыха",
+        "mechanic": "Выберите: +2 к максимальной Мане ИЛИ +1 слот подготовленного заклинания до следующего долгого отдыха.",
+        "sourceDescription": "Пассив. Увеличивает запас подготовленных заклинаний или Маны.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Чернильная память",
+        "action": "Пассив",
+        "limit": "1/сцену",
+        "mechanic": "Восстановить свойства ранее изученной формулы без повторной расшифровки; +2 к проверке восстановления повреждённых записей.",
+        "sourceDescription": "Пассив. После изучения магической формулы можете восстановить её основные свойства без повторной проверки.",
+        "status": "new_candidate",
+        "autoAt1": false
+      }
+    ],
+    "warlock": [
+      {
+        "name": "Трансцендентность",
+        "action": "Пассив",
+        "limit": "1/бой",
+        "mechanic": "Когда на вас накладывается магическое состояние, сократить его длительность на 1 раунд (не ниже 0), если оно допускает длительность.",
+        "sourceDescription": "Пассив. Первый раз за бой при получении магического состояния можете ослабить его эффект.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Кровавые весы",
+        "action": "Малое",
+        "limit": "1/раунд",
+        "mechanic": "Потерять 2 текущих настоящих HP, не ниже 1, ради +2 к следующей магической проверке попадания до конца хода.",
+        "sourceDescription": "Малое действие. Потеряйте часть HP, чтобы усилить следующую магическую атаку.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Сам себе проклятье",
+        "action": "Малое",
+        "limit": "1/раунд",
+        "mechanic": "Получить Проклятие 1 (макс 3) ради +2 урона следующего заклинания в этом ходу; уровни Проклятия дают -1 к проверкам за каждый, снимаются долгим отдыхом либо специальным очищением.",
+        "sourceDescription": "Малое действие. Добровольно получите Проклятие 1 ради бонуса к следующему магическому эффекту.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Благо умершего",
+        "action": "Реакция",
+        "limit": "1/сцену",
+        "mechanic": "Когда в 5 м погибает значимое существо, восстановить 1 Ману ИЛИ получить 2 временных HP; не срабатывает на собственных призывах, устройствах и бесконечно созданных целях.",
+        "sourceDescription": "Реакция, 1/раунд. Когда рядом погибает существо, получите временный бонус или восстановите часть ресурса.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Ритуальные услуги",
+        "action": "Вне боя",
+        "limit": "1/долгий отдых",
+        "mechanic": "Ритуал 10 минут и 3 Маны: печать на одну заранее определённую небоевую задачу, +2 к одной проверке до следующего отдыха.",
+        "sourceDescription": "Вне боя. Позволяет проводить договоры, призывы, печати и длительные ритуалы.",
+        "status": "new_candidate",
+        "autoAt1": false
+      }
+    ],
+    "priest": [
+      {
+        "name": "Божья кара",
+        "action": "Основное",
+        "limit": "1/раунд",
+        "mechanic": "Одна магическая атака обычного доступного Круга; +2 урона цели, которая ранила союзника с начала предыдущего хода Жреца.",
+        "sourceDescription": "Основное действие. Магическая атака усиливается против цели, которая нанесла урон союзнику после вашего предыдущего хода.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Два реликта",
+        "action": "Пассив",
+        "limit": "постоянно",
+        "mechanic": "Разрешается поддерживать два различных освящённых реликта; общее ограничение магических привязок не меняется, одинаковый тип Защиты не складывается.",
+        "sourceDescription": "Пассив. Можете поддерживать два подготовленных религиозных реликта одновременно.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Первая Заповедь",
+        "action": "Реакция",
+        "limit": "1/раунд",
+        "mechanic": "Союзнику до 5 м +2 к сопротивлению состоянию либо сократить его длительность на 1 раунд после наложения.",
+        "sourceDescription": "Реакция. Когда союзник получает состояние, дайте ему бонус к сопротивлению или сократите длительность эффекта.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Покров веры",
+        "action": "Малое",
+        "limit": "1/раунд",
+        "mechanic": "За 1 Ману дать союзнику до 5 м +2 Защиты [active] до начала следующего хода Жреца; повтор обновляет, не суммирует.",
+        "sourceDescription": "Малое действие. Союзник получает временную Защиту до начала вашего следующего хода.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Благословение оружия",
+        "action": "Основное",
+        "limit": "1/сцену",
+        "mechanic": "За 2 Маны на 3 раунда оружие союзника становится магическим и получает +1 урона против указанной категории существ; требует поддержания.",
+        "sourceDescription": "Основное действие. На несколько раундов оружие союзника считается магическим и усиливается против выбранного типа существ.",
+        "status": "new_candidate",
+        "autoAt1": false
+      }
+    ],
+    "druid": [
+      {
+        "name": "Дикий Облик",
+        "action": "Основное",
+        "limit": "1/сцену",
+        "mechanic": "На 3 раунда принять обычную природную форму: скорость +1 м, рукопашная атака с базовым уроном 5; без бесплатных HP/атак и без сотворения заклинаний в обычной форме.",
+        "sourceDescription": "Основное действие. Примите природную форму, меняющую доступные движения и физические свойства.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Терновые Корни",
+        "action": "Основное",
+        "limit": "1/сцену",
+        "mechanic": "За 2 Маны на 2 раунда создать область корней радиусом 2 м: трудная местность; цели с провалом сопротивления Силы против 20+ступень+Мудрость Обездвижены до конца следующего хода.",
+        "sourceDescription": "Основное действие. Создайте участок корней: враги внутри Замедляются и могут быть удержаны.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Прикосновение Жизни",
+        "action": "Основное",
+        "limit": "1/ход",
+        "mechanic": "За 1 Ману восстановить 4 HP одной цели в 1 м, не выше максимума.",
+        "sourceDescription": "Основное действие. Восстановите HP себе или существу рядом.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Гнев Природы",
+        "action": "Основное",
+        "limit": "1/ход",
+        "mechanic": "За 1 Ману провести магическую атаку с уроном 6 и природным типом по выбору, если он обоснован окружением.",
+        "sourceDescription": "Основное действие. Природная магическая атака; тип эффекта зависит от окружения или выбранной формы.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Шёпот Рощи",
+        "action": "Пассив",
+        "limit": "1/сцену",
+        "mechanic": "Прочитать следы природы: +2 к одной проверке Мудрости о природной среде и получить короткую подсказку Мастера.",
+        "sourceDescription": "Пассив / вне боя. Получаете информацию от растений, животных и природных следов.",
+        "status": "new_candidate",
+        "autoAt1": false
+      }
+    ],
+    "summoner": [
+      {
+        "name": "Призыв Слуги",
+        "action": "Основное",
+        "limit": "базовая способность",
+        "mechanic": "Автоматически с уровня 1: за 2 Маны создать одного базового Слугу в соседней свободной клетке на 1 сцену, если Узы позволяют; атака требует Малого приказа, не более 1 атакующего приказа за раунд.",
+        "sourceDescription": "Основное действие. Призовите базового Слугу; число одновременно активных существ ограничено классом.",
+        "status": "new_candidate",
+        "autoAt1": true
+      },
+      {
+        "name": "Командный Импульс",
+        "action": "Малое",
+        "limit": "1/раунд",
+        "mechanic": "Усиленная тактическая команда: дополнительно переместить одного Слугу на 2 м ИЛИ дать ему +2 к сопротивлению следующему контролю; не является атакой и не увеличивает глобальный предел приказов.",
+        "sourceDescription": "Малое действие. Один призванный союзник немедленно выполняет простое движение или подготовленное действие.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Жертвенная Связь",
+        "action": "Реакция",
+        "limit": "1/раунд",
+        "mechanic": "Перенаправить 2+ступень входящего после сопротивлений урона на активного Слугу в 5 м, не больше его текущих HP; остальное получает исходная цель.",
+        "sourceDescription": "Реакция. Перераспределите часть входящего урона между участниками Уз.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Укрепление Уз",
+        "action": "Малое",
+        "limit": "1/раунд",
+        "mechanic": "За 1 Ману дать одному Слуге в 5 м +2 Защиты [ward] ИЛИ +2 к одному сопротивлению до начала следующего хода.",
+        "sourceDescription": "Малое действие. Призванное существо получает временную Защиту или сопротивление состоянию.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Обратная Связь",
+        "action": "Пассив",
+        "limit": "1/сцену",
+        "mechanic": "Если ваш Слуга погиб или исчез, получить 2+ступень временных HP ИЛИ восстановить 1 Ману; не срабатывает от добровольного досрочного отзыва.",
+        "sourceDescription": "Пассив. Когда призванное существо погибает или исчезает, хозяин получает небольшой временный эффект вместо полной потери темпа.",
+        "status": "new_candidate",
+        "autoAt1": false
+      }
+    ],
+    "mechanist": [
+      {
+        "name": "Развёртывание Устройства",
+        "action": "Основное",
+        "limit": "базовая способность",
+        "mechanic": "Автоматически с уровня 1: за 2 Маны развёрнуть в соседней клетке устройство с 1 Зарядом из собственного резерва; единственная атакующая активация в раунде требует Малого действия и расходует Заряд.",
+        "sourceDescription": "Основное действие. Разместите подготовленное устройство в соседней свободной клетке.",
+        "status": "new_candidate",
+        "autoAt1": true
+      },
+      {
+        "name": "Перезарядка",
+        "action": "Малое",
+        "limit": "1/устройство/раунд",
+        "mechanic": "Переместить 1 Заряд из резерва Механиста в устройство, не превышая вместимость 2; это не создаёт новый Заряд.",
+        "sourceDescription": "Малое действие. Восстановите Заряд выбранному устройству или подготовьте его к следующему применению.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Экстренный Ремонт",
+        "action": "Основное",
+        "limit": "1/устройство/сцену",
+        "mechanic": "За 2 резервных Заряда восстановить 4+2×ступень прочности устройства, не выше максимума.",
+        "sourceDescription": "Основное действие. Восстановите прочность устройства или временно верните сломанное устройство в работу.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Перегрузка Системы",
+        "action": "Малое",
+        "limit": "1/устройство/раунд",
+        "mechanic": "Дополнительно потратить 1 Заряд устройства ради +2 урона его следующего срабатывания в этом раунде; повтор не суммируется.",
+        "sourceDescription": "Малое действие. Усильте следующее срабатывание устройства ценой дополнительного Заряда или повреждения.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Разбор",
+        "action": "Основное",
+        "limit": "1/устройство/сцену",
+        "mechanic": "Разобрать собственное устройство, восстановив 1 Заряд в резерве (не выше предела); чужой простой механизм отключить при успешной проверке Интеллекта против DC Мастера.",
+        "sourceDescription": "Вне боя / Основное действие в бою. Разберите механизм или быстро отключите простое устройство рядом.",
+        "status": "new_candidate",
+        "autoAt1": false
+      }
+    ],
+    "rogue": [
+      {
+        "name": "Удар из тени",
+        "action": "Основное",
+        "limit": "1/раунд",
+        "mechanic": "Одна атака по цели с Меткой, Ослеплением или ещё не совершившей ход в этом раунде: +2+ступень урона при попадании, без дополнительной атаки.",
+        "sourceDescription": "Основное действие, 1/раунд. Если цель имеет Метку, Ослеплена или ещё не ходила в этом раунде, атака получает дополнительный урон.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Слабое место",
+        "action": "Малое",
+        "limit": "1/цель/раунд",
+        "mechanic": "Наложить +1 Метку на видимую цель, максимум 6; Метка сама урона не причиняет.",
+        "sourceDescription": "Малое действие. Наложите Метку 1 на видимую цель. Максимум 6 Меток.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Перекат",
+        "action": "Реакция",
+        "limit": "1/раунд",
+        "mechanic": "Против объявленной атаки +3 Защиты [active]; при промахе переместиться на 2 м; получить Усталость 1.",
+        "sourceDescription": "Реакция. Получите +3 Защиты против объявленной атаки; если она промахнулась, переместитесь на 2 м. Усталость 1.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Дымовая завеса",
+        "action": "Основное",
+        "limit": "1/короткий отдых",
+        "mechanic": "Дым в радиусе 2 м на 1 раунд; враги внутри делают сопротивление Мудрости против 20+ступень+Ловкость, при провале Ослеплены до конца своего следующего хода.",
+        "sourceDescription": "Основное действие, 1/короткий отдых. Ближайшие враги получают Слепоту после проверки сопротивления.",
+        "status": "new_candidate",
+        "autoAt1": false
+      },
+      {
+        "name": "Ловкие пальцы",
+        "action": "Пассив",
+        "limit": "постоянно",
+        "mechanic": "+2 к проверкам взлома, ловушек и ловкости рук; взаимодействие с простым мелким предметом в бою может выполняться Малым действием 1/раунд.",
+        "sourceDescription": "Пассив. Замки, ловушки, карманы и быстрые взаимодействия с предметами; часть таких действий в бою выполняется Малым действием.",
+        "status": "new_candidate",
+        "autoAt1": false
+      }
+    ]
+  },
+  "advancedAbilitiesStatus": "Names and paths present in source; exact 260 path effects and True Class skills must be authored; cannot be asserted complete from current sources.",
+  "characterEditor": {
+    "baseClassIds": [
+      "warrior",
+      "monk",
+      "bard",
+      "ranger",
+      "archer",
+      "mage",
+      "wizard",
+      "warlock",
+      "priest",
+      "druid",
+      "summoner",
+      "rogue",
+      "mechanist"
+    ],
+    "draftClasses": [
+      "soul_devourer"
+    ],
+    "raceIds": [
+      "human",
+      "elf",
+      "dwarf",
+      "dragonborn",
+      "tabaxi",
+      "half-orc",
+      "tortle",
+      "goliath",
+      "tiefling",
+      "grung",
+      "serpent",
+      "scorpionfolk"
+    ],
+    "draftRaces": [
+      "ashborn"
+    ],
+    "kitOptionsPerClass": 2,
+    "autoSkills": {
+      "summoner": [
+        "Призыв Слуги"
+      ],
+      "mechanist": [
+        "Развёртывание Устройства"
+      ]
+    },
+    "startSkillChoiceCount": 1,
+    "startAttributeBudget": 8,
+    "requireResolvedSkillForUse": true,
+    "persistLevelChoices": true,
+    "currentHPstartsAtMax": true,
+    "currentMPstartsAtMax": true
+  },
+  "magic": {
+    "spellsFromFullCatalog": "список отдельных заклинаний ещё не написан; редактор обязан показывать только существующие утверждённые записи",
+    "accessGate": "наличие маны не даёт знания заклинания",
+    "casterSaveDC": "20+ступень+профильный атрибут",
+    "singleTargetDamage": "4+2*K, если только урон, попадание/сопротивление указывается в карточке",
+    "singleHeal": "2+2*K, автоматически для согласной цели",
+    "areaDamage": "ceil((4+2*K)/2) на каждую из максимум 1+ceil(K/2) целей; критическое усиление только первой объявленной цели",
+    "concentration": "не более одного поддерживаемого эффекта за раз; после потери HP проверка 2d20+Телосложение>=20, при неудаче эффект прекращается",
+    "durationDefault": "если не указана длительность, мгновенное действие; нет бессрочных боевых усилений",
+    "knownPreparedCandidates": {
+      "mage": "3 известных на L1; +1 на L3,5,7,9; все доступны",
+      "wizard": "7 записанных на L1; +1 формула за каждый следующий уровень; подготовленных 3+ступень",
+      "warlock": "3 договорных на L1; +1 на L4,7,10",
+      "priest": "5 молитв на L1; 3+ступень подготовленных",
+      "druid": "4 природных на L1; 3+ступень подготовленных, +1 известное L4,7,10",
+      "summoner": "2 шаблона на L1; один подготовленный для развертывания"
+    }
+  },
+  "editorValidation": {
+    "levelRange": [
+      1,
+      10
+    ],
+    "exactPointBuyBudget": 8,
+    "attributesInitialCap": 4,
+    "attributesLaterCap": 6,
+    "noDuplicateAbilityChoices": true,
+    "skillsAtLevel": "exactly 1 by L1; exactly 2 by L2; exactly 3 by L3",
+    "summonerMechanistAutoDoNotConsumeChoice": true,
+    "pathSelectLevel": 4,
+    "onePathPassiveAt4": true,
+    "pathActiveChoiceLevels": [
+      4,
+      6
+    ],
+    "attributeIncreaseLevels": [
+      5,
+      7,
+      9
+    ],
+    "trueClassLevel": 7,
+    "trueClassActiveChoiceLevels": [
+      8,
+      9
+    ],
+    "capstoneLevel": 10,
+    "hiddenBranchesRequireGMUnlock": true,
+    "equippedAndInventorySlotLimits": true,
+    "maxManaAndHPChangesDoNotHeal": true,
+    "draftRaceAndClassNotPlayerSelectable": true,
+    "doNotSilentlyConvertLegacyFirestoreCharacters": true,
+    "resourceCurrentMustBeBetween0AndMax": true,
+    "allAppliedEffectsNeedTypedIdsAndExpiration": true
+  }
+}
